@@ -11,5 +11,11 @@
     "skipLibCheck": true,
     "types": ["chrome-types"]
   },
-  "include": ["src/popup.ts", "src/common.ts", "src/definitions.d.ts"]
+  "include": [
+    "src/popup.ts",
+    "src/common.ts",
+    "src/build.ts",
+    "src/check.ts",
+    "src/definitions.d.ts"
+  ]
 }
