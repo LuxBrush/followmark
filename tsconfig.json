@@ -1,0 +1,7 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.background.json" },
+    { "path": "./tsconfig.popup.json" }
+  ]
+}
