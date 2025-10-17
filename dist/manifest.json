@@ -8,7 +8,7 @@
 
   "browser_specific_settings": {
     "gecko": {
-      "id": "luxbrushmedia@proton.me",
+      "id": "npmlux@proton.me",
       "strict_min_version": "1.0.0"
     }
   },
