@@ -3,7 +3,7 @@
   "name": "FollowMark",
   "short_name": "FollowMark",
   "version": "0.0.1",
-  "description": "FollowMark: Your bookmakrs follow your progress automatically! Great for webcomics, wikis, blogs, and YouTube!",
+  "description": "FollowMark: Your bookmarks follow your progress automatically! Great for webcomics, wikis, blogs, and YouTube!",
   "author": "Lux Brush",
 
   "browser_specific_settings": {
