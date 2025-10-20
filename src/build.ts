@@ -59,26 +59,31 @@ export function buildSVG<K extends keyof SVGElementTagNameMap>(
  * @param {HTMLAttributes|SVGAttributes} attributes - An object containing attribute key-value pairs
  */
 function setElementAttributes(element: HTMLElement | SVGElement, attributes: HTMLAttributes | SVGAttributes) {
-  for (const attribute in attributes) {
-    switch (attribute) {
-      case "classList":
-        if (attributes[attribute]) {
-          element.classList.add(...attributes[attribute]);
-        }
-        break;
-      case "innerText":
-      case "innerHTML":
-      case "textContent":
-      case "onclick":
-      case "onmouseover":
-      case "onmouseout":
-      case "onchange":
-        element[attribute] = attributes[attribute];
-        break;
-      default:
-        element.setAttribute(attribute, attributes[attribute]);
-        break;
+  for (const [key, value] of Object.entries(attributes)) {
+    if (value === undefined) continue;
+
+    // Handle classList separately
+    if (key === "classList" && Array.isArray(value)) {
+      element.classList.add(...value);
+      continue;
     }
+
+    // Handle data attributes
+    if (key === "data" && typeof value === "object" && value !== null) {
+      for (const [dataKey, dataValue] of Object.entries(value)) {
+        element.setAttribute(`data-${dataKey}`, String(dataValue));
+      }
+      continue;
+    }
+
+    // Handle event listeners and direct properties
+    if (key.startsWith("on") || key === "innerText" || key === "innerHTML" || key === "textContent") {
+      (element as any)[key] = value;
+      continue;
+    }
+
+    // Handle all other attributes via setAttribute
+    element.setAttribute(key, String(value));
   }
 }
 
