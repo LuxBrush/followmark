@@ -8,16 +8,15 @@ import { Get } from "./check.js";
  * @param {string | HTMLElement} [appendTo] - Optional ID or element to append to
  * @returns {HTMLElementTagNameMap[K]} The created HTML element
  */
-export const buildElement = <K extends keyof HTMLElementTagNameMap>(
+export function buildElement<K extends keyof HTMLElementTagNameMap>(
   tagName: K,
   attributes: HTMLAttributes,
-  appendTo?: string | HTMLElement
-): HTMLElementTagNameMap[K] => {
+  appendTo?: string | HTMLElement,
+): HTMLElementTagNameMap[K] {
   const element = document.createElement(tagName);
   setElementAttributes(element, attributes);
   if (appendTo) {
-    const target =
-      typeof appendTo === "string" ? Get.elementByID(appendTo) : appendTo;
+    const target = typeof appendTo === "string" ? Get.elementByID(appendTo) : appendTo;
     if (!(target instanceof HTMLElement)) {
       console.error("The appendTo for target is not an HTML element.", target);
       return element;
@@ -25,7 +24,7 @@ export const buildElement = <K extends keyof HTMLElementTagNameMap>(
     target.appendChild(element);
   }
   return element;
-};
+}
 
 /**
  * Creates an SVG element with specified tag and content
@@ -35,39 +34,32 @@ export const buildElement = <K extends keyof HTMLElementTagNameMap>(
  * @param {string | HTMLElement | SVGElement} appendTo - ID or element to append to
  * @returns {SVGElementTagNameMap[K]} The created SVG element
  */
-export const buildSVG = <K extends keyof SVGElementTagNameMap>(
+export function buildSVG<K extends keyof SVGElementTagNameMap>(
   tagName: K,
   attributes: SVGAttributes,
-  appendTo: string | HTMLElement | SVGElement
-): SVGElementTagNameMap[K] => {
+  appendTo: string | HTMLElement | SVGElement,
+): SVGElementTagNameMap[K] {
   const svgNS = "http://www.w3.org/2000/svg";
   const element = document.createElementNS(svgNS, tagName);
   setElementAttributes(element, attributes);
   if (appendTo) {
-    const target =
-      typeof appendTo === "string" ? Get.elementByID(appendTo) : appendTo;
+    const target = typeof appendTo === "string" ? Get.elementByID(appendTo) : appendTo;
     if (!(target instanceof HTMLElement) && !(target instanceof SVGElement)) {
-      console.error(
-        "The appendTo target is not an HTML or SVG element.",
-        target
-      );
+      console.error("The appendTo target is not an HTML or SVG element.", target);
       return element;
     }
     target.appendChild(element);
   }
   return element;
-};
+}
 
 /**
  * Sets attributes on an HTML or SVG element
  * @param {HTMLElement|SVGElement} element - The element to set attributes on
  * @param {HTMLAttributes|SVGAttributes} attributes - An object containing attribute key-value pairs
  */
-const setElementAttributes = (
-  element: HTMLElement | SVGElement,
-  attributes: HTMLAttributes | SVGAttributes
-) => {
-  Object.keys(attributes).forEach((attribute) => {
+function setElementAttributes(element: HTMLElement | SVGElement, attributes: HTMLAttributes | SVGAttributes) {
+  for (const attribute in attributes) {
     switch (attribute) {
       case "classList":
         if (attributes[attribute]) {
@@ -87,8 +79,9 @@ const setElementAttributes = (
         element.setAttribute(attribute, attributes[attribute]);
         break;
     }
-  });
-};
+  }
+}
+
 interface HTMLAttributes {
   id?: string;
   classList?: string[];
@@ -184,11 +177,7 @@ interface SVGAttributes {
   "letter-spacing"?: string | number;
   "word-spacing"?: string | number;
   "text-decoration"?: string;
-  "text-rendering"?:
-    | "auto"
-    | "optimizeSpeed"
-    | "optimizeLegibility"
-    | "geometricPrecision";
+  "text-rendering"?: "auto" | "optimizeSpeed" | "optimizeLegibility" | "geometricPrecision";
   "writing-mode"?: "lr-tb" | "rl-tb" | "tb-rl" | "lr" | "rl" | "tb";
   "text-length"?: string | number;
   "length-adjust"?: "spacing" | "spacingAndGlyphs";
