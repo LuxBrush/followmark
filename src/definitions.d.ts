@@ -5,4 +5,9 @@ type Mark = {
 
 type FollowMarks = Record<string, Mark>;
 
-type FollowMarkVersion = number;
+type FollowMarkVersion = string;
+
+type FollowMarkStorage = {
+  followMarkVersion?: FollowMarkVersion;
+  followMarks?: FollowMarks;
+};
