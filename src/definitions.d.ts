@@ -11,3 +11,5 @@ type FollowMarkStorage = {
   followMarkVersion?: FollowMarkVersion;
   followMarks?: FollowMarks;
 };
+
+type Versions = [number, number, number];
