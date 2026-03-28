@@ -1,3 +1,4 @@
+import { Get } from "./check";
 export const FollowMarkState = {
   version: "",
 };
@@ -88,7 +89,35 @@ async function getInfoFromTab(tab: chrome.tabs.Tab) {
   return { url, title, favIconUrl };
 }
 
-export function compareVersions(currentVersion: string, storedVersion: string) {
+export async function checkVersion() {
+  const followMarkVersionTest = await getStorage("followMarkVersion");
+  const currentVersion = chrome.runtime.getManifest().version as string;
+  if (!followMarkVersionTest) {
+    FollowMarkState.version = currentVersion;
+    await writeStorage({ followMarkVersion: FollowMarkState.version });
+  }
+  const versionElement = Get.elementByID("version");
+  const storedVersion = followMarkVersionTest;
+
+  let newVersion = false;
+  if (storedVersion) {
+    FollowMarkState.version = storedVersion;
+    newVersion = compareVersions(currentVersion, storedVersion);
+  }
+
+  if (storedVersion && newVersion) {
+    FollowMarkState.version = currentVersion;
+    await writeStorage({ followMarkVersion: FollowMarkState.version });
+
+    const updateMessage = Get.elementByID("update-message");
+    updateMessage.textContent = "Add-on has been updated!";
+    versionElement.parentNode?.insertBefore(updateMessage, versionElement.nextSibling);
+  }
+
+  versionElement.textContent = `Version: ${FollowMarkState.version}`;
+}
+
+function compareVersions(currentVersion: string, storedVersion: string) {
   const cVParts = currentVersion.split(".");
   const sVParts = storedVersion.split(".");
   if (cVParts.length !== 3 || sVParts.length !== 3) {
