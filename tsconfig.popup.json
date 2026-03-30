@@ -14,6 +14,7 @@
   "include": [
     "src/popup.ts",
     "src/common.ts",
+    "src/marks.ts",
     "src/build.ts",
     "src/check.ts",
     "src/definitions.d.ts"

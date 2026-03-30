@@ -1,5 +1,6 @@
 import { buildElement } from "./build.js";
-import { MakeMark, checkVersion, getStorage } from "./common.js";
+import { checkVersion } from "./common.js";
+import { MakeMark } from "./marks.js";
 
 async function Main() {
   await checkVersion();
