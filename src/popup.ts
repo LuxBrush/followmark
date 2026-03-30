@@ -6,10 +6,7 @@ async function Main() {
 
   const mainButton = buildElement("button", { textContent: "Make FollowMark" }, "stage");
   mainButton.onclick = async () => {
-    const followMarksTest = await getStorage("followMarks");
-    if (!followMarksTest) {
-      await MakeMark();
-    }
+    await MakeMark();
   };
 }
 Main();

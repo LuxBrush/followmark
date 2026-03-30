@@ -1,5 +1,7 @@
 type Mark = {
-  id: string;
+  hostname: string;
+  progress: string;
+  title: string;
   favIconUrl: string;
 };
 

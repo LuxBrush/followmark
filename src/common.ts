@@ -4,19 +4,19 @@ export const FollowMarkState = {
 };
 
 export async function MakeMark() {
-  chrome.tabs.query({ active: true, currentWindow: true }, async (foundTabs) => {
-    const foundTab = foundTabs[0];
-    const { url, title, favIconUrl } = await getInfoFromTab(foundTab);
-    const id = generateUniqueId();
-    await writeStorage({
-      followMarks: {
-        [url]: {
-          id,
-          favIconUrl,
-        },
-      },
-    });
-  });
+  const [foundTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  const { url, title, favIconUrl } = await getInfoFromTab(foundTab);
+  const { hostname, pathname } = url;
+  const followMarks = (await getStorage("followMarks")) || {};
+
+  followMarks[hostname] = {
+    hostname,
+    progress: pathname,
+    title,
+    favIconUrl,
+  };
+
+  await writeStorage({ followMarks });
 }
 
 export async function writeStorage(items: { followMarks: FollowMarks }): Promise<void>;
@@ -43,21 +43,14 @@ export async function getStorage(
 }
 
 /**
- * Generates a unique identifier by combining timestamp and random number
- * @returns {string} A unique identifier in base36 format
- */
-export function generateUniqueId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2);
-}
-
-/**
  * Extracts URL, title and favicon from a Chrome tab
  * @param tab - Chrome tab object to extract info from
  * @returns Object with url, title and favIconUrl (empty strings if unavailable)
  */
 async function getInfoFromTab(tab: chrome.tabs.Tab) {
-  let url = tab.url;
-  if (!url) url = "";
+  let stringUrl = tab.url;
+  if (!stringUrl) stringUrl = "";
+  const url = new URL(stringUrl);
   let title = tab.title;
   if (!title) title = "";
   let favIconUrl = tab.favIconUrl;
