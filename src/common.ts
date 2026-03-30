@@ -1,4 +1,4 @@
-import { Get } from "./check";
+import { Get } from "./check.js";
 export const FollowMarkState = {
   version: "",
 };
@@ -118,27 +118,5 @@ export async function checkVersion() {
 }
 
 function compareVersions(currentVersion: string, storedVersion: string) {
-  const cVParts = currentVersion.split(".");
-  const sVParts = storedVersion.split(".");
-  if (cVParts.length !== 3 || sVParts.length !== 3) {
-    console.error("Invalid version format:", { currentVersion, storedVersion });
-    return false;
-  }
-  const [cMaj, cMin, cPat] = convertToVersion(cVParts);
-  const [sMaj, sMin, sPat] = convertToVersion(sVParts);
-
-  if (cMaj > sMaj) return true;
-  if (cMaj < sMaj) return false;
-  if (cMin > sMin) return true;
-  if (cMin < sMin) return false;
-
-  return cPat > sPat;
-}
-
-function convertToVersion(vParts: string[]): Versions {
-  const nVParts: Versions = [0, 0, 0];
-  nVParts[0] = Number(vParts[0]);
-  nVParts[1] = Number(vParts[1]);
-  nVParts[2] = Number(vParts[2]);
-  return nVParts;
+  return currentVersion.localeCompare(storedVersion, undefined, { numeric: true }) > 0;
 }
