@@ -11,5 +11,5 @@
     "skipLibCheck": true,
     "types": ["chrome-types"]
   },
-  "include": ["src/background.ts", "src/common.ts", "src/definitions.d.ts"]
+  "include": ["src/background.ts", "src/bookmarks.ts", "src/common.ts", "src/marks.ts", "src/definitions.d.ts"]
 }

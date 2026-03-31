@@ -16,6 +16,12 @@ export async function MakeMark() {
   await writeStorage({ followMarks });
 }
 
+export async function getMark(url: string) {
+  const hostname = new URL(url).hostname;
+  const followMarks = await getStorage("followMarks");
+  return followMarks?.[hostname] ?? null;
+}
+
 /**
  * Extracts URL, title and favicon from a Chrome tab
  * @param tab - Chrome tab object to extract info from
