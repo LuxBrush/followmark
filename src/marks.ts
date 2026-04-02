@@ -1,8 +1,21 @@
+import { Get } from "./check.js";
 import { getStorage, writeStorage } from "./common.js";
 
+/**
+ * Creates or updates a follow mark for the currently active tab.
+ * Extracts tab information and saves it to local storage.
+ * @returns Promise void
+ */
 export async function MakeMark() {
   const [foundTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  const { url, title, favIconUrl } = await getInfoFromTab(foundTab);
+  const info = await getInfoFromTab(foundTab);
+
+  if (info.url.protocol === "about:") {
+    Get.elementByID("update-message").textContent = "Cannot create a mark for this tab.";
+    return;
+  }
+
+  const { url, title, favIconUrl } = info;
   const { hostname, pathname } = url;
   const followMarks = (await getStorage("followMarks")) || {};
 
@@ -16,6 +29,11 @@ export async function MakeMark() {
   await writeStorage({ followMarks });
 }
 
+/**
+ * Retrieves a follow mark for a given URL's hostname.
+ * @param url - The URL to check for a follow mark.
+ * @returns The mark object or null if not found.
+ */
 export async function getMark(url: string) {
   const hostname = new URL(url).hostname;
   const followMarks = await getStorage("followMarks");
@@ -25,39 +43,66 @@ export async function getMark(url: string) {
 /**
  * Extracts URL, title and favicon from a Chrome tab
  * @param tab - Chrome tab object to extract info from
- * @returns Object with url, title and favIconUrl (empty strings if unavailable)
+ * @returns Object with url, title and favIconUrl
  */
 async function getInfoFromTab(tab: chrome.tabs.Tab) {
-  let stringUrl = tab.url;
-  if (!stringUrl) stringUrl = "";
-  const url = new URL(stringUrl);
-  let title = tab.title;
-  if (!title) title = "";
-  let favIconUrl = tab.favIconUrl;
-  if (!favIconUrl) favIconUrl = "";
+  const url = getURL(tab);
+
+  const title = tab.title ?? "";
+
+  const favIconUrl = await getFavIcon(tab);
+
+  return { url, title, favIconUrl };
+}
+
+/**
+ * Extracts the URL from a Chrome tab.
+ * @param tab - The Chrome tab object.
+ * @returns The parsed URL object or about:blank if invalid.
+ */
+function getURL(tab: chrome.tabs.Tab) {
+  let stringURL = tab.url ?? "";
+
+  try {
+    const url = new URL(stringURL);
+
+    return url;
+  } catch (error) {
+    console.error("Url is malformed or an empty string:", stringURL);
+    return new URL("about:blank");
+  }
+}
+
+/**
+ * Retrieves the favicon URL for a tab, attempting to find the icon from the page content if necessary.
+ * @param tab - The Chrome tab object.
+ * @returns The favicon URL or a default icon path.
+ */
+async function getFavIcon(tab: chrome.tabs.Tab) {
+  const defaultIcon = "/icons/inactive.png";
+  const favIconUrl = tab.favIconUrl ?? defaultIcon;
+  // If favIconUrl is a data URL, try to get the favicon from the page's head
   if (favIconUrl.startsWith("data:")) {
     const tabId = tab.id;
-    if (!tabId) {
-      favIconUrl = "";
-      return { url, title, favIconUrl };
-    }
-    // If favIconUrl is a data URL, try to get the favicon from the page's head
+    if (!tabId) return defaultIcon;
+
     try {
       const results = await chrome.scripting.executeScript({
         target: { tabId },
         func: () => {
-          const link = document.querySelector('link[rel*="icon"]') as HTMLAnchorElement | null;
+          const link = document.querySelector('link[rel*="icon"]') as HTMLLinkElement | null;
           return link ? link.href : "";
         },
       });
 
       if (results && results[0]?.result) {
-        favIconUrl = results[0].result as string;
+        return results[0].result as string;
       }
     } catch (error) {
       console.error("Failed to fetch favicon:", error);
+      return defaultIcon;
     }
   }
 
-  return { url, title, favIconUrl };
+  return favIconUrl;
 }
