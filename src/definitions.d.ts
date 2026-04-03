@@ -1,4 +1,5 @@
 type Mark = {
+  bookmarkID: string;
   hostname: string;
   progress: string;
   title: string;
