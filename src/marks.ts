@@ -8,9 +8,8 @@ import { getStorage, writeStorage } from "./common.js";
  * @returns Promise void
  */
 export async function MakeMark(bookmarkID?: string) {
-  const [foundTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  const info = await getInfoFromActiveTab();
   const followMarks = (await getStorage("followMarks")) || {};
-  const info = await getInfoFromTab(foundTab);
 
   if (info.url.protocol === "about:") {
     Get.elementByID("update-message").textContent = "Cannot create a mark for this tab.";
@@ -96,7 +95,8 @@ export async function getMark(url: string) {
  * @param tab - Chrome tab object to extract info from
  * @returns Object with url, title and favIconUrl
  */
-async function getInfoFromTab(tab: chrome.tabs.Tab) {
+async function getInfoFromActiveTab() {
+  const tab = await getActiveTab();
   const url = getURL(tab);
 
   const title = tab.title ?? "";
@@ -104,6 +104,11 @@ async function getInfoFromTab(tab: chrome.tabs.Tab) {
   const favIconUrl = await getFavIcon(tab);
 
   return { url, title, favIconUrl };
+}
+
+async function getActiveTab() {
+  const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  return activeTab;
 }
 
 /**
