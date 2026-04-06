@@ -7,7 +7,7 @@ import { getStorage, writeStorage } from "./common.js";
  * Extracts tab information and saves it to local storage.
  * @returns Promise void
  */
-export async function MakeMark(bookmarkUrl?: string) {
+export async function MakeMark(bookmarkID?: string) {
   const [foundTab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const followMarks = (await getStorage("followMarks")) || {};
   const info = await getInfoFromTab(foundTab);
@@ -20,10 +20,26 @@ export async function MakeMark(bookmarkUrl?: string) {
   const { url, title, favIconUrl } = info;
   const { hostname, href } = url;
 
-  const bookmark = await findBookmark(bookmarkUrl ? bookmarkUrl : href);
+  if (bookmarkID) {
+    const [bookmark] = await chrome.bookmarks.get(bookmarkID);
+    const bookmarkUrl = new URL(bookmark.url ? bookmark.url : "");
+    followMarks[bookmarkUrl.hostname] = {
+      bookmarkID: bookmark.id,
+      hostname: bookmarkUrl.hostname,
+      progress: bookmark.url ? bookmark.url : "",
+      title: bookmark.title,
+      favIconUrl,
+    };
+
+    await writeStorage({ followMarks });
+    return;
+  }
+
+  const bookmark = await findBookmark(href);
   if (bookmark.length > 0) {
     if (bookmark.length > 1) {
       buildBookmarkList(bookmark);
+      return;
     }
     followMarks[hostname] = {
       bookmarkID: bookmark[0].id,
@@ -42,6 +58,7 @@ export async function MakeMark(bookmarkUrl?: string) {
     buildBookmarkList(bookmarks);
     return;
   }
+
   let folderID = "";
   const folders = await findFolders("followMarks");
   if (folders.length === 0) {

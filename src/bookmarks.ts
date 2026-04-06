@@ -27,7 +27,7 @@ export function buildBookmarkList(bookmarks: chrome.bookmarks.BookmarkTreeNode[]
         textContent: bookmark.url,
         classList: ["bookmark-button"],
         onclick: () => {
-          MakeMark(bookmark.url);
+          MakeMark(bookmark.id);
         },
       },
       li,
