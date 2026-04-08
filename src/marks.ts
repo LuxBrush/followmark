@@ -1,6 +1,6 @@
 import { buildBookmarkList, findBookmark, findBookmarks, findFolders } from "./bookmarks.js";
 import { Get } from "./check.js";
-import { FollowMarkState, getStorage, writeStorage } from "./common.js";
+import { FollowMarkState } from "./common.js";
 
 /**
  * Creates or updates a follow mark for the currently active tab.
@@ -9,11 +9,6 @@ import { FollowMarkState, getStorage, writeStorage } from "./common.js";
  */
 export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
   const info = await getInfoFromActiveTab();
-  const followMarks = state.getMarks();
-
-  if (!followMarks) {
-    return;
-  }
 
   if (info.url.protocol === "about:") {
     Get.elementByID("update-message").textContent = "Cannot create a mark for this tab.";
@@ -26,15 +21,16 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
   if (bookmarkID) {
     const [bookmark] = await chrome.bookmarks.get(bookmarkID);
     const bookmarkUrl = new URL(bookmark.url ? bookmark.url : "");
-    followMarks[bookmarkUrl.hostname] = {
-      bookmarkID: bookmark.id,
-      hostname: bookmarkUrl.hostname,
-      progress: bookmark.url ? bookmark.url : "",
-      title: bookmark.title,
-      favIconUrl,
-    };
 
-    await state.setMarks(followMarks);
+    await state.setMarks({
+      [bookmarkUrl.hostname]: {
+        bookmarkID: bookmark.id,
+        hostname: bookmarkUrl.hostname,
+        progress: bookmark.url ?? "",
+        title: bookmark.title,
+        favIconUrl: favIconUrl,
+      },
+    });
     return;
   }
 
@@ -44,15 +40,16 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
       buildBookmarkList(state, bookmark);
       return;
     }
-    followMarks[hostname] = {
-      bookmarkID: bookmark[0].id,
-      hostname,
-      progress: href,
-      title,
-      favIconUrl,
-    };
 
-    await state.setMarks(followMarks);
+    await state.setMarks({
+      [hostname]: {
+        bookmarkID: bookmark[0].id,
+        hostname,
+        progress: href,
+        title,
+        favIconUrl,
+      },
+    });
     return;
   }
 
@@ -72,27 +69,15 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
   }
   const newBookmark = await chrome.bookmarks.create({ parentId: folderID, url: href });
 
-  followMarks[hostname] = {
-    bookmarkID: newBookmark.id,
-    hostname,
-    progress: href,
-    title,
-    favIconUrl,
-  };
-
-  await state.setMarks(followMarks);
-}
-
-/**
- * Retrieves a follow mark for a given URL's hostname.
- * @param url - The URL to check for a follow mark.
- * @returns The mark object or null if not found.
- */
-export async function getMark(url: string) {
-  const hostname = new URL(url).hostname;
-  const followMarksStorage = await getStorage();
-  const { followMarks } = followMarksStorage;
-  return followMarks?.[hostname] ?? null;
+  await state.setMarks({
+    [hostname]: {
+      bookmarkID: newBookmark.id,
+      hostname,
+      progress: href,
+      title,
+      favIconUrl,
+    },
+  });
 }
 
 /**

@@ -9,15 +9,6 @@ chrome.tabs.onUpdated.addListener(async (_, changeInfo, tab) => {
     const mark = state.getMark(tab.url);
     if (mark) {
       await chrome.bookmarks.update(mark.bookmarkID, { url: tab.url, title: tab.title });
-
-      // const followMarks = {mark.hostname: {
-      //   bookmarkID: mark.bookmarkID,
-      //   hostname: mark.hostname,
-      //   progress: tab.url,
-      //   title: tab.title ?? "",
-      //   favIconUrl: mark.favIconUrl,
-      // };
-
       await state.updateMarks({ [mark.hostname]: { progress: tab.url, title: tab.title } });
     }
   }

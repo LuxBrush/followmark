@@ -30,7 +30,7 @@ export class FollowMarkState {
   }
 
   async setMarks(followMarks: FollowMarks) {
-    this.followMarkStorage.followMarks = followMarks;
+    this.followMarkStorage.followMarks = { ...this.followMarkStorage.followMarks, ...followMarks };
     await writeStorage(this.followMarkStorage);
   }
 
