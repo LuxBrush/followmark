@@ -1,6 +1,7 @@
 import { Get } from "./check.js";
 import { buildElement } from "./build.js";
 import { MakeMark } from "./marks.js";
+import { FollowMarkState } from "./common.js";
 
 export async function findBookmark(url: string) {
   return await chrome.bookmarks.search({ url });
@@ -15,7 +16,7 @@ export async function findFolders(folderName: string) {
   return results.filter((item) => !item.url);
 }
 
-export function buildBookmarkList(bookmarks: chrome.bookmarks.BookmarkTreeNode[]) {
+export function buildBookmarkList(state: FollowMarkState, bookmarks: chrome.bookmarks.BookmarkTreeNode[]) {
   const stage = Get.elementByID("stage");
 
   for (const bookmark of bookmarks) {
@@ -27,7 +28,7 @@ export function buildBookmarkList(bookmarks: chrome.bookmarks.BookmarkTreeNode[]
         textContent: bookmark.url,
         classList: ["bookmark-button"],
         onclick: () => {
-          MakeMark(bookmark.id);
+          MakeMark(state, bookmark.id);
         },
       },
       li,

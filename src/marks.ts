@@ -1,15 +1,19 @@
 import { buildBookmarkList, findBookmark, findBookmarks, findFolders } from "./bookmarks.js";
 import { Get } from "./check.js";
-import { getStorage, writeStorage } from "./common.js";
+import { FollowMarkState, getStorage, writeStorage } from "./common.js";
 
 /**
  * Creates or updates a follow mark for the currently active tab.
  * Extracts tab information and saves it to local storage.
  * @returns Promise void
  */
-export async function MakeMark(bookmarkID?: string) {
+export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
   const info = await getInfoFromActiveTab();
-  const followMarks = (await getStorage("followMarks")) || {};
+  const followMarks = state.getMarks();
+
+  if (!followMarks) {
+    return;
+  }
 
   if (info.url.protocol === "about:") {
     Get.elementByID("update-message").textContent = "Cannot create a mark for this tab.";
@@ -30,14 +34,14 @@ export async function MakeMark(bookmarkID?: string) {
       favIconUrl,
     };
 
-    await writeStorage({ followMarks });
+    await state.setMarks(followMarks);
     return;
   }
 
   const bookmark = await findBookmark(href);
   if (bookmark.length > 0) {
     if (bookmark.length > 1) {
-      buildBookmarkList(bookmark);
+      buildBookmarkList(state, bookmark);
       return;
     }
     followMarks[hostname] = {
@@ -48,13 +52,13 @@ export async function MakeMark(bookmarkID?: string) {
       favIconUrl,
     };
 
-    await writeStorage({ followMarks });
+    await state.setMarks(followMarks);
     return;
   }
 
   const bookmarks = await findBookmarks(hostname);
   if (bookmarks.length > 0) {
-    buildBookmarkList(bookmarks);
+    buildBookmarkList(state, bookmarks);
     return;
   }
 
@@ -76,7 +80,7 @@ export async function MakeMark(bookmarkID?: string) {
     favIconUrl,
   };
 
-  await writeStorage({ followMarks });
+  await state.setMarks(followMarks);
 }
 
 /**
@@ -86,7 +90,8 @@ export async function MakeMark(bookmarkID?: string) {
  */
 export async function getMark(url: string) {
   const hostname = new URL(url).hostname;
-  const followMarks = await getStorage("followMarks");
+  const followMarksStorage = await getStorage();
+  const { followMarks } = followMarksStorage;
   return followMarks?.[hostname] ?? null;
 }
 

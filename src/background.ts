@@ -1,26 +1,24 @@
-import { getStorage, writeStorage } from "./common.js";
-import { getMark } from "./marks.js";
+import { FollowMarkState, getStorage, writeStorage } from "./common.js";
+
+const state = await FollowMarkState.create();
 
 chrome.tabs.onUpdated.addListener(async (_, changeInfo, tab) => {
   if (changeInfo.status === "complete") {
     if (!tab.url) return;
 
-    const mark = await getMark(tab.url);
+    const mark = state.getMark(tab.url);
     if (mark) {
       await chrome.bookmarks.update(mark.bookmarkID, { url: tab.url, title: tab.title });
 
-      const followMarks = await getStorage("followMarks");
-      if (followMarks) {
-        followMarks[mark.hostname] = {
-          bookmarkID: mark.bookmarkID,
-          hostname: mark.hostname,
-          progress: tab.url,
-          title: tab.title ?? "",
-          favIconUrl: mark.favIconUrl,
-        };
+      // const followMarks = {mark.hostname: {
+      //   bookmarkID: mark.bookmarkID,
+      //   hostname: mark.hostname,
+      //   progress: tab.url,
+      //   title: tab.title ?? "",
+      //   favIconUrl: mark.favIconUrl,
+      // };
 
-        await writeStorage({ followMarks });
-      }
+      await state.updateMarks({ [mark.hostname]: { progress: tab.url, title: tab.title } });
     }
   }
 });
@@ -28,7 +26,8 @@ chrome.tabs.onUpdated.addListener(async (_, changeInfo, tab) => {
 chrome.tabs.onActivated.addListener(async (activateTab) => {
   const tab = await chrome.tabs.get(activateTab.tabId);
   if (!tab.url) return;
-  const mark = await getMark(tab.url);
+
+  const mark = state.getMark(tab.url);
   if (mark) {
     console.log(mark.title);
   }

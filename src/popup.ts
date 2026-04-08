@@ -1,13 +1,14 @@
 import { buildElement } from "./build.js";
-import { checkVersion } from "./common.js";
+import { FollowMarkState } from "./common.js";
 import { MakeMark } from "./marks.js";
 
 async function Main() {
-  await checkVersion();
+  const state = await FollowMarkState.create();
+  state.checkVersion()
 
   const mainButton = buildElement("button", { textContent: "Make FollowMark" }, "stage");
   mainButton.onclick = async () => {
-    await MakeMark();
+    await MakeMark(state);
   };
 }
 Main();
