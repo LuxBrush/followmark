@@ -33,6 +33,6 @@
     "default_popup": "popup.html",
     "default_title": "FollowMark - follows your progress automatically"
   },
-  "permissions": ["tabs", "storage", "bookmarks", "scripting"],
+  "permissions": ["tabs", "storage", "bookmarks", "scripting", "notifications"],
   "host_permissions": ["<all_urls>"]
 }

@@ -15,6 +15,16 @@ export class FollowMarkState {
     });
   }
 
+  private notifyMessage(title: string, message: string) {
+    chrome.notifications.create({
+      type: "basic",
+      iconUrl: "icons/active.png",
+      title,
+      message,
+      priority: 2,
+    });
+  }
+
   static async create() {
     const storage = await getStorage();
     return new FollowMarkState(storage);
@@ -25,8 +35,17 @@ export class FollowMarkState {
   }
 
   getMark(url: string): Mark | null {
-    const hostname = new URL(url).hostname;
-    return this.getMarks()[hostname] ?? null;
+    if (!url || url.trim() === "") {
+      this.notifyMessage("Get FollowMark Error", `Cannot get a FollowMark for an empty or null url: ${url}`);
+      return null;
+    }
+    try {
+      const hostname = new URL(url).hostname;
+      return this.getMarks()[hostname] ?? null;
+    } catch (error) {
+      this.notifyMessage("Get FollowMark Error", `Invalid URL provided to getMark: ${url}`);
+      return null;
+    }
   }
 
   async setMarks(followMarks: FollowMarks) {
@@ -41,7 +60,7 @@ export class FollowMarkState {
       if (current[hostname]) {
         current[hostname] = { ...current[hostname], ...partialMark };
       } else {
-        Get.elementByID("update-message").textContent = `Attempted to update non-existent mark for ${hostname}`;
+        this.notifyMessage("FollowMark Update Error", `Attempted to update non-existent mark for ${hostname}`);
       }
     }
 
@@ -90,28 +109,6 @@ export async function getStorage(): Promise<FollowMarkStorage> {
   const local = await chrome.storage.local.get();
   return local;
 }
-
-// export async function checkVersion() {
-//   const currentVersion = chrome.runtime.getManifest().version as string;
-//   const followMarksStorage = await getStorage();
-//   const { followMarkVersion } = followMarksStorage;
-//   const versionElement = Get.elementByID("version");
-
-//   if (!followMarkVersion || compareVersions(currentVersion, followMarkVersion)) {
-//     FollowMarkState.version = currentVersion;
-//     await writeStorage({ followMarkVersion: currentVersion });
-
-//     if (followMarkVersion) {
-//       const updateMessage = Get.elementByID("update-message");
-//       updateMessage.textContent = "Add-on has been updated!";
-//       versionElement.parentNode?.insertBefore(updateMessage, versionElement.nextSibling);
-//     }
-//   } else {
-//     FollowMarkState.version = followMarkVersion;
-//   }
-
-//   versionElement.textContent = `Version: ${FollowMarkState.version}`;
-// }
 
 function compareVersions(currentVersion: string, storedVersion: string) {
   return currentVersion.localeCompare(storedVersion, undefined, { numeric: true }) > 0;
