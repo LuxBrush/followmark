@@ -20,7 +20,7 @@ chrome.tabs.onActivated.addListener(async (activateTab) => {
 
   const mark = state.getMark(tab.url);
   if (mark) {
-    await chrome.action.setIcon({ path: { "120": "icons/active.png" } });
+    await chrome.action.setIcon({ path: mark.favIconUrl || { "120": "icons/active.png" } });
   } else {
     await chrome.action.setIcon({ path: { "120": "icons/inactive.png" } });
   }
