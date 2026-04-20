@@ -1,8 +1,9 @@
-import { FollowMarkState, getStorage, writeStorage } from "./common.js";
+import { FollowMarkState } from "./common.js";
 
-const state = await FollowMarkState.create();
+const stateAwait = FollowMarkState.create();
 
 chrome.tabs.onUpdated.addListener(async (_, changeInfo, tab) => {
+  const state = await stateAwait;
   if (changeInfo.status === "complete") {
     if (!tab.url) return;
 
@@ -15,6 +16,7 @@ chrome.tabs.onUpdated.addListener(async (_, changeInfo, tab) => {
 });
 
 chrome.tabs.onActivated.addListener(async (activateTab) => {
+  const state = await stateAwait;
   const tab = await chrome.tabs.get(activateTab.tabId);
   if (!tab.url) return;
 
