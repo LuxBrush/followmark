@@ -1,6 +1,6 @@
 import { buildBookmarkList, findBookmark, findBookmarks, findFolders } from "./bookmarks.js";
 import { Get } from "./check.js";
-import { FollowMarkState } from "./common.js";
+import { extractKeyID, FollowMarkState } from "./common.js";
 
 /**
  * Creates or updates a follow mark for the currently active tab.
@@ -17,6 +17,7 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
 
   const { url, title, favIconUrl } = info;
   const { hostname, href } = url;
+  const itemID = extractKeyID(title, href);
 
   if (bookmarkID) {
     const [bookmark] = await chrome.bookmarks.get(bookmarkID);
@@ -24,11 +25,9 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
 
     await state.setMarks({
       [bookmarkUrl.hostname]: {
-        bookmarkID: bookmark.id,
         hostname: bookmarkUrl.hostname,
-        progress: bookmark.url ?? "",
-        title: bookmark.title,
         favIconUrl: favIconUrl,
+        items: { [itemID]: { bookmarkID: bookmark.id, title: title, urlString: href } },
       },
     });
     return;
@@ -43,11 +42,15 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
 
     await state.setMarks({
       [hostname]: {
-        bookmarkID: bookmark[0].id,
         hostname,
-        progress: href,
-        title,
         favIconUrl,
+        items: {
+          [itemID]: {
+            bookmarkID: bookmark[0].id,
+            title,
+            urlString: href,
+          },
+        },
       },
     });
     return;
@@ -71,14 +74,14 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
 
   await state.setMarks({
     [hostname]: {
-      bookmarkID: newBookmark.id,
       hostname,
-      progress: href,
-      title,
       favIconUrl,
+      items: { [itemID]: { bookmarkID: newBookmark.id, title, urlString: href } },
     },
   });
 }
+
+function newMark(followMark: FollowMarks) {}
 
 /**
  * Extracts URL, title and favicon from a Chrome tab

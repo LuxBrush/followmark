@@ -1,9 +1,13 @@
-type Mark = {
+type item = {
   bookmarkID: string;
-  hostname: string;
-  progress: string;
   title: string;
+  urlString: string;
+};
+
+type Mark = {
+  hostname: string;
   favIconUrl: string;
+  items: Record<string, item>;
 };
 
 type FollowMarks = Record<string, Mark>;

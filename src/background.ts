@@ -1,4 +1,4 @@
-import { FollowMarkState } from "./common.js";
+import { extractKeyID, FollowMarkState } from "./common.js";
 
 const stateAwait = FollowMarkState.create();
 
@@ -8,9 +8,13 @@ chrome.tabs.onUpdated.addListener(async (_, changeInfo, tab) => {
     if (!tab.url) return;
 
     const mark = state.getMark(tab.url);
+    const itemID = extractKeyID(tab.title, tab.url);
     if (mark) {
-      await chrome.bookmarks.update(mark.bookmarkID, { url: tab.url, title: tab.title });
-      await state.updateMarks({ [mark.hostname]: { progress: tab.url, title: tab.title } });
+      const bookmarkID = mark.items[itemID].bookmarkID;
+      await chrome.bookmarks.update(bookmarkID, { url: tab.url, title: tab.title });
+      await state.updateMarks({
+        [mark.hostname]: { items: { [itemID]: { bookmarkID, urlString: tab.url, title: tab.title ?? "" } } },
+      });
     }
   }
 });
