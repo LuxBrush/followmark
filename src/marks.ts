@@ -1,4 +1,4 @@
-import { buildBookmarkList, findBookmark, findBookmarks} from "./bookmarks.js";
+import { buildBookmarkList, findBookmark, findBookmarks } from "./bookmarks.js";
 import { extractKeyID, FollowMarkState, notifyMessage } from "./common.js";
 
 /**
@@ -8,7 +8,7 @@ import { extractKeyID, FollowMarkState, notifyMessage } from "./common.js";
  */
 export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
   const info = await getInfoFromActiveTab();
-  const folderID = await state.getFollowMarkFolderID()
+  const folderID = await state.getFollowMarkFolderID();
 
   if (info.url.protocol === "about:") {
     notifyMessage("Cannot create Mark", "Cannot create a mark for this tab.");
@@ -40,6 +40,7 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
         items: { [bookmarkKey]: { bookmarkID, title: bookmark.title, urlString: bookmarkUrl.href } },
       },
     });
+    notifyMessage("FollowMark Added", `Mark added for bookmark: ${bookmark.title}`);
     return;
   }
 
@@ -63,6 +64,7 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
         },
       },
     });
+    notifyMessage("FollowMark Added", `Mark added for bookmark: ${title}`);
     return;
   }
 
@@ -78,6 +80,7 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
           items: { [itemID]: { bookmarkID: newBookmark.id, title, urlString: href } },
         },
       });
+      notifyMessage("FollowMark Item Added", `Mark item added for: ${hostname} - ${title}`);
       return;
     }
     buildBookmarkList(state, bookmarks);
@@ -93,6 +96,7 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
       items: { [itemID]: { bookmarkID: newBookmark.id, title, urlString: href } },
     },
   });
+  notifyMessage("FollowMark Added", `New mark added for: ${title}`);
 }
 
 /**
