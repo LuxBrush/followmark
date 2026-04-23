@@ -1,6 +1,5 @@
 import { buildBookmarkList, findBookmark, findBookmarks, findFolders } from "./bookmarks.js";
-import { Get } from "./check.js";
-import { extractKeyID, FollowMarkState } from "./common.js";
+import { extractKeyID, FollowMarkState, notifyMessage } from "./common.js";
 
 /**
  * Creates or updates a follow mark for the currently active tab.
@@ -19,7 +18,7 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
   }
 
   if (info.url.protocol === "about:") {
-    Get.elementByID("update-message").textContent = "Cannot create a mark for this tab.";
+    notifyMessage("Cannot create Mark", "Cannot create a mark for this tab.");
     return;
   }
 
@@ -28,14 +27,24 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
   const itemID = extractKeyID(title, href);
 
   if (bookmarkID) {
-    const [bookmark] = await chrome.bookmarks.get(bookmarkID);
-    const bookmarkUrl = new URL(bookmark.url ? bookmark.url : "");
+    const bookmarks = await chrome.bookmarks.get(bookmarkID);
+    if (bookmarks.length === 0) {
+      notifyMessage("Bookmark not found", `Bookmark for ID: ${bookmarkID} was not found.`);
+      return;
+    }
+    const [bookmark] = bookmarks;
+    if (!bookmark.url) {
+      notifyMessage("Cannot create Mark", "Cannot create a mark for this bookmark.");
+      return;
+    }
+    const bookmarkUrl = new URL(bookmark.url);
+    const bookmarkKey = extractKeyID(bookmark.title, bookmarkUrl.href);
 
     await state.setMarks({
       [bookmarkUrl.hostname]: {
         hostname: bookmarkUrl.hostname,
         favIconUrl: favIconUrl,
-        items: { [itemID]: { bookmarkID: bookmark.id, title: title, urlString: href } },
+        items: { [bookmarkKey]: { bookmarkID, title: bookmark.title, urlString: bookmarkUrl.href } },
       },
     });
     return;
