@@ -58,7 +58,11 @@ export class FollowMarkState {
 
     for (const [hostname, partialMark] of Object.entries(marks)) {
       if (current[hostname]) {
-        current[hostname] = { ...current[hostname], ...partialMark };
+        current[hostname] = {
+          ...current[hostname],
+          ...partialMark,
+          items: { ...current[hostname].items, ...partialMark.items },
+        };
       } else {
         this.notifyMessage("FollowMark Update Error", `Attempted to update non-existent mark for ${hostname}`);
       }

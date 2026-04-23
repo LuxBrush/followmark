@@ -18,9 +18,9 @@ export async function findFolders(folderName: string) {
 
 export function buildBookmarkList(state: FollowMarkState, bookmarks: chrome.bookmarks.BookmarkTreeNode[]) {
   const stage = Get.elementByID("stage");
+  const ul = buildElement("ul", { classList: ["bookmark-list"] }, stage);
 
   for (const bookmark of bookmarks) {
-    const ul = buildElement("ul", { classList: ["bookmark-list"] }, stage);
     const li = buildElement("li", { classList: ["bookmark-item"] }, ul);
     buildElement(
       "button",
