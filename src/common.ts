@@ -72,6 +72,20 @@ export class FollowMarkState {
     await writeStorage(this.followMarkStorage);
   }
 
+  checkMarkItems(hostname: string, url: string) {
+    const mark = this.getMarks()[hostname];
+    if (!mark) return false;
+
+    const items = mark.items;
+    if (Check.isEmpty.object(items)) return false;
+
+    for (const item of Object.values(items)) {
+      if (item.urlString === url) return true;
+    }
+
+    return false;
+  }
+
   getVersion(): FollowMarkVersion {
     return this.followMarkStorage.followMarkVersion || "0.0.0";
   }

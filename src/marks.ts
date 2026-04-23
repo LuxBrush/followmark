@@ -9,6 +9,14 @@ import { extractKeyID, FollowMarkState } from "./common.js";
  */
 export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
   const info = await getInfoFromActiveTab();
+  let folderID = "";
+  const folders = await findFolders("followMarks");
+  if (folders.length === 0) {
+    const folder = await chrome.bookmarks.create({ title: "followMarks" });
+    folderID = folder.id;
+  } else {
+    folderID = folders[0].id;
+  }
 
   if (info.url.protocol === "about:") {
     Get.elementByID("update-message").textContent = "Cannot create a mark for this tab.";
@@ -58,19 +66,23 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
 
   const bookmarks = await findBookmarks(hostname);
   if (bookmarks.length > 0) {
+    if (!state.checkMarkItems(hostname, href)) {
+      const newBookmark = await chrome.bookmarks.create({ parentId: folderID, title, url: href });
+
+      await state.updateMarks({
+        [hostname]: {
+          hostname,
+          favIconUrl,
+          items: { [itemID]: { bookmarkID: newBookmark.id, title, urlString: href } },
+        },
+      });
+      return;
+    }
     buildBookmarkList(state, bookmarks);
     return;
   }
 
-  let folderID = "";
-  const folders = await findFolders("followMarks");
-  if (folders.length === 0) {
-    const folder = await chrome.bookmarks.create({ title: "followMarks" });
-    folderID = folder.id;
-  } else {
-    folderID = folders[0].id;
-  }
-  const newBookmark = await chrome.bookmarks.create({ parentId: folderID, url: href });
+  const newBookmark = await chrome.bookmarks.create({ parentId: folderID, title, url: href });
 
   await state.setMarks({
     [hostname]: {
@@ -80,8 +92,6 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
     },
   });
 }
-
-function newMark(followMark: FollowMarks) {}
 
 /**
  * Extracts URL, title and favicon from a Chrome tab
