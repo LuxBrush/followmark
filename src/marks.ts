@@ -1,4 +1,4 @@
-import { buildBookmarkList, findBookmark, findBookmarks, findFolders } from "./bookmarks.js";
+import { buildBookmarkList, findBookmark, findBookmarks} from "./bookmarks.js";
 import { extractKeyID, FollowMarkState, notifyMessage } from "./common.js";
 
 /**
@@ -8,14 +8,7 @@ import { extractKeyID, FollowMarkState, notifyMessage } from "./common.js";
  */
 export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
   const info = await getInfoFromActiveTab();
-  let folderID = "";
-  const folders = await findFolders("followMarks");
-  if (folders.length === 0) {
-    const folder = await chrome.bookmarks.create({ title: "followMarks" });
-    folderID = folder.id;
-  } else {
-    folderID = folders[0].id;
-  }
+  const folderID = await state.getFollowMarkFolderID()
 
   if (info.url.protocol === "about:") {
     notifyMessage("Cannot create Mark", "Cannot create a mark for this tab.");

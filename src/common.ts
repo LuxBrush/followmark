@@ -1,7 +1,18 @@
 import { Check, Get } from "./check.js";
 
+export function notifyMessage(title: string, message: string) {
+  chrome.notifications.create({
+    type: "basic",
+    iconUrl: "icons/active.png",
+    title,
+    message,
+    priority: 2,
+  });
+}
+
 export class FollowMarkState {
   private followMarkStorage: FollowMarkStorage;
+  private followMarkFolderID: string | null = null;
 
   private constructor(storage: FollowMarkStorage) {
     this.followMarkStorage = storage;
@@ -15,19 +26,25 @@ export class FollowMarkState {
     });
   }
 
-  private notifyMessage(title: string, message: string) {
-    chrome.notifications.create({
-      type: "basic",
-      iconUrl: "icons/active.png",
-      title,
-      message,
-      priority: 2,
-    });
-  }
-
   static async create() {
     const storage = await getStorage();
     return new FollowMarkState(storage);
+  }
+
+  async getFollowMarkFolderID() {
+    if (this.followMarkFolderID) return this.followMarkFolderID;
+
+    const results = await chrome.bookmarks.search({ title: "followMarks" });
+    const folder = results.find((item) => !item.url);
+
+    if (folder) {
+      this.followMarkFolderID = folder.id;
+    } else {
+      const newFolder = await chrome.bookmarks.create({ title: "followMarks" });
+      this.followMarkFolderID = newFolder.id;
+    }
+
+    return this.followMarkFolderID;
   }
 
   getMarks(): FollowMarks {
@@ -36,14 +53,14 @@ export class FollowMarkState {
 
   getMark(url: string): Mark | null {
     if (!url || url.trim() === "") {
-      this.notifyMessage("Get FollowMark Error", `Cannot get a FollowMark for an empty or null url: ${url}`);
+      notifyMessage("Get FollowMark Error", `Cannot get a FollowMark for an empty or null url: ${url}`);
       return null;
     }
     try {
       const hostname = new URL(url).hostname;
       return this.getMarks()[hostname] ?? null;
     } catch (error) {
-      this.notifyMessage("Get FollowMark Error", `Invalid URL provided to getMark: ${url}`);
+      notifyMessage("Get FollowMark Error", `Invalid URL provided to getMark: ${url}`);
       return null;
     }
   }
@@ -64,7 +81,7 @@ export class FollowMarkState {
           items: { ...current[hostname].items, ...partialMark.items },
         };
       } else {
-        this.notifyMessage("FollowMark Update Error", `Attempted to update non-existent mark for ${hostname}`);
+        notifyMessage("FollowMark Update Error", `Attempted to update non-existent mark for ${hostname}`);
       }
     }
 
