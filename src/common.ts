@@ -70,6 +70,10 @@ export class FollowMarkState {
     await writeStorage(this.followMarkStorage);
   }
 
+  async setMark(hostname: string, mark: Mark) {
+    await this.setMarks({ [hostname]: mark });
+  }
+
   async updateMarks(marks: Record<string, Partial<Mark>>) {
     const current = this.getMarks();
 
@@ -87,6 +91,10 @@ export class FollowMarkState {
 
     this.followMarkStorage.followMarks = current;
     await writeStorage(this.followMarkStorage);
+  }
+
+  async updateMark(hostname: string, mark: Partial<Mark>) {
+    await this.updateMarks({ [hostname]: mark });
   }
 
   checkMarkItems(hostname: string, url: string) {

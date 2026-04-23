@@ -33,12 +33,10 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
     const bookmarkUrl = new URL(bookmark.url);
     const bookmarkKey = extractKeyID(bookmark.title, bookmarkUrl.href);
 
-    await state.setMarks({
-      [bookmarkUrl.hostname]: {
-        hostname: bookmarkUrl.hostname,
-        favIconUrl: favIconUrl,
-        items: { [bookmarkKey]: { bookmarkID, title: bookmark.title, urlString: bookmarkUrl.href } },
-      },
+    await state.setMark(bookmarkUrl.hostname, {
+      hostname: bookmarkUrl.hostname,
+      favIconUrl: favIconUrl,
+      items: { [bookmarkKey]: { bookmarkID, title: bookmark.title, urlString: bookmarkUrl.href } },
     });
     notifyMessage("FollowMark Added", `Mark added for bookmark: ${bookmark.title}`);
     return;
@@ -51,16 +49,14 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
       return;
     }
 
-    await state.setMarks({
-      [hostname]: {
-        hostname,
-        favIconUrl,
-        items: {
-          [itemID]: {
-            bookmarkID: bookmark[0].id,
-            title,
-            urlString: href,
-          },
+    await state.setMark(hostname, {
+      hostname,
+      favIconUrl,
+      items: {
+        [itemID]: {
+          bookmarkID: bookmark[0].id,
+          title,
+          urlString: href,
         },
       },
     });
@@ -73,12 +69,10 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
     if (!state.checkMarkItems(hostname, href)) {
       const newBookmark = await chrome.bookmarks.create({ parentId: folderID, title, url: href });
 
-      await state.updateMarks({
-        [hostname]: {
-          hostname,
-          favIconUrl,
-          items: { [itemID]: { bookmarkID: newBookmark.id, title, urlString: href } },
-        },
+      await state.updateMark(hostname, {
+        hostname,
+        favIconUrl,
+        items: { [itemID]: { bookmarkID: newBookmark.id, title, urlString: href } },
       });
       notifyMessage("FollowMark Item Added", `Mark item added for: ${hostname} - ${title}`);
       return;
@@ -89,12 +83,10 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
 
   const newBookmark = await chrome.bookmarks.create({ parentId: folderID, title, url: href });
 
-  await state.setMarks({
-    [hostname]: {
-      hostname,
-      favIconUrl,
-      items: { [itemID]: { bookmarkID: newBookmark.id, title, urlString: href } },
-    },
+  await state.setMark(hostname, {
+    hostname,
+    favIconUrl,
+    items: { [itemID]: { bookmarkID: newBookmark.id, title, urlString: href } },
   });
   notifyMessage("FollowMark Added", `New mark added for: ${title}`);
 }

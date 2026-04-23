@@ -12,8 +12,8 @@ chrome.tabs.onUpdated.addListener(async (_, changeInfo, tab) => {
     if (mark) {
       const bookmarkID = mark.items[itemID].bookmarkID;
       await chrome.bookmarks.update(bookmarkID, { url: tab.url, title: tab.title });
-      await state.updateMarks({
-        [mark.hostname]: { items: { [itemID]: { bookmarkID, urlString: tab.url, title: tab.title ?? "" } } },
+      await state.updateMark(mark.hostname, {
+        items: { [itemID]: { bookmarkID, urlString: tab.url, title: tab.title ?? "" } },
       });
     }
   }
