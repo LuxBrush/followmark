@@ -22,8 +22,8 @@ export function buildBookmarkList(state: FollowMarkState, bookmarks: chrome.book
       {
         textContent: bookmark.url,
         classList: ["bookmark-button"],
-        onclick: () => {
-          MakeMark(state, bookmark.id);
+        onclick: async () => {
+          await MakeMark(state, bookmark.id);
         },
       },
       li,
