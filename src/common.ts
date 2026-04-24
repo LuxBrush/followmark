@@ -1,5 +1,10 @@
 import { Check, Get } from "./check.js";
 
+export const Icons = {
+  active: { "120": "icons/active.png" },
+  inactive: { "120": "icons/inactive.png" },
+};
+
 export function notifyMessage(title: string, message: string) {
   chrome.notifications.create({
     type: "basic",
