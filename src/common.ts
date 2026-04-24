@@ -66,6 +66,20 @@ export class FollowMarkState {
   }
 
   async setMarks(followMarks: FollowMarks) {
+    const folderID = await this.getFollowMarkFolderID();
+
+    for (const mark of Object.values(followMarks)) {
+      for (const [key, item] of Object.entries(mark.items)) {
+        if (!item.bookmarkID) {
+          const newBookmark = await chrome.bookmarks.create({
+            parentId: folderID,
+            title: item.title,
+            url: item.urlString,
+          });
+          mark.items[key].bookmarkID = newBookmark.id;
+        }
+      }
+    }
     this.followMarkStorage.followMarks = { ...this.followMarkStorage.followMarks, ...followMarks };
     await writeStorage(this.followMarkStorage);
   }
@@ -84,6 +98,23 @@ export class FollowMarkState {
           ...partialMark,
           items: { ...current[hostname].items, ...partialMark.items },
         };
+
+        if (partialMark.items) {
+          for (const key in partialMark.items) {
+            const item = current[hostname].items[key];
+            if (item.bookmarkID) {
+              await chrome.bookmarks.update(item.bookmarkID, { title: item.title, url: item.urlString });
+            } else {
+              const folderID = await this.getFollowMarkFolderID();
+              const newBookmark = await chrome.bookmarks.create({
+                parentId: folderID,
+                title: item.title,
+                url: item.urlString,
+              });
+              current[hostname].items[key].bookmarkID = newBookmark.id;
+            }
+          }
+        }
       } else {
         notifyMessage("FollowMark Update Error", `Attempted to update non-existent mark for ${hostname}`);
       }

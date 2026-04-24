@@ -8,7 +8,6 @@ import { extractKeyID, FollowMarkState, notifyMessage } from "./common.js";
  */
 export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
   const info = await getInfoFromActiveTab();
-  const folderID = await state.getFollowMarkFolderID();
 
   if (info.url.protocol === "about:") {
     notifyMessage("Cannot create Mark", "Cannot create a mark for this tab.");
@@ -67,12 +66,10 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
   const bookmarks = await findBookmarks(hostname);
   if (bookmarks.length > 0) {
     if (!state.checkMarkItems(hostname, href)) {
-      const newBookmark = await chrome.bookmarks.create({ parentId: folderID, title, url: href });
-
       await state.updateMark(hostname, {
         hostname,
         favIconUrl,
-        items: { [itemID]: { bookmarkID: newBookmark.id, title, urlString: href } },
+        items: { [itemID]: { bookmarkID: "", title, urlString: href } },
       });
       notifyMessage("FollowMark Item Added", `Mark item added for: ${hostname} - ${title}`);
       return;
@@ -81,12 +78,10 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
     return;
   }
 
-  const newBookmark = await chrome.bookmarks.create({ parentId: folderID, title, url: href });
-
   await state.setMark(hostname, {
     hostname,
     favIconUrl,
-    items: { [itemID]: { bookmarkID: newBookmark.id, title, urlString: href } },
+    items: { [itemID]: { bookmarkID: "", title, urlString: href } },
   });
   notifyMessage("FollowMark Added", `New mark added for: ${title}`);
 }
