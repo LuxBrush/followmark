@@ -217,23 +217,32 @@ function extractTitleKey(title: string, defaultKey: string) {
 }
 
 function extractHrefKey(href: string, defaultKey: string) {
-  if (href.includes("webtoons")) {
-    const webtoonsMatches = href.match(/webtoons\.com\/.*?\/(?:.*?\/(.*?)\/|.*?\/(.*?)$)/);
-    if (webtoonsMatches) {
-      return sanitizeKey(webtoonsMatches[1]);
+  try {
+    const url = new URL(href);
+
+    if (href.includes("webtoons")) {
+      const webtoonsMatches = href.match(/webtoons\.com\/.*?\/(?:.*?\/(.*?)\/|.*?\/(.*?)$)/);
+      if (webtoonsMatches) {
+        return sanitizeKey(webtoonsMatches[1]);
+      }
     }
+
+    return sanitizeKey(url.hostname);
+  } catch (error) {
+    return defaultKey;
   }
-  const matches = href.match(/\.com\/([^/]+)/);
-  if (matches) {
-    return sanitizeKey(matches[1]);
-  }
-  return defaultKey;
 }
 
 function sanitizeKey(text: string) {
-  return text
-    .replace(/[^a-zA-Z0-9\s-]/g, "")
+  const sanitized = text
+    .replace(/[^a-zA-Z0-9\s_]/g, "_")
     .trim()
-    .replace(/\s+/g, "-")
+    .replace(/\s+/g, "_")
     .toLowerCase();
+
+  if (!sanitized || /^\d/.test(sanitized)) {
+    return `_${sanitized || "key"}`;
+  }
+
+  return sanitized;
 }
