@@ -9,19 +9,20 @@ chrome.tabs.onUpdated.addListener(async (_, changeInfo, tab) => {
     if (!tab.url) return;
 
     const mark = state.getMark(tab.url);
-    const itemID = extractKeyID(tab.title, tab.url);
+    const foundItem = state.getMarkItem(tab.url);
 
-    if (mark) {
-      await chrome.action.setIcon({ path: mark.favIconUrl || active });
+    if (mark && foundItem) {
+      const [key, currentItem] = foundItem;
 
-      const currentItem = mark.items[itemID];
       const updatedItem: Item = {
         bookmarkID: currentItem.bookmarkID,
         title: tab.title ?? "untitled",
         urlString: tab.url,
       };
 
-      await state.updateMark(mark.hostname, { items: { [itemID]: updatedItem } });
+      await state.updateMark(mark.hostname, { items: { [key]: updatedItem } });
+
+      await chrome.action.setIcon({ path: mark.favIconUrl || active });
     } else {
       await chrome.action.setIcon({ path: inactive });
     }

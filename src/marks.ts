@@ -65,7 +65,8 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
 
   const bookmarks = await findBookmarks(hostname);
   if (bookmarks.length > 0) {
-    if (!state.checkMarkItems(hostname, href)) {
+    const foundItem = state.getMarkItem(href);
+    if (!foundItem) {
       await state.updateMark(hostname, {
         hostname,
         favIconUrl,

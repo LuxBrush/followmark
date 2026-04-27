@@ -70,6 +70,23 @@ export class FollowMarkState {
     }
   }
 
+  getMarkItem(href: string, key?: string): [string, Item] | null {
+    try {
+      const url = new URL(href);
+      const mark = this.getMarks()[url.hostname];
+
+      if (!mark || !mark.items) return null;
+
+      if (key && mark.items[key]) return [key, mark.items[key]];
+
+      const foundItem = Object.entries(mark.items).find(([_, item]) => item.urlString === href);
+      return foundItem ?? null;
+    } catch (error) {
+      console.error(`Error in getting item from href:${href}`, error);
+      return null;
+    }
+  }
+
   async setMarks(followMarks: FollowMarks) {
     const folderID = await this.getFollowMarkFolderID();
 
@@ -131,20 +148,6 @@ export class FollowMarkState {
 
   async updateMark(hostname: string, mark: Partial<Mark>) {
     await this.updateMarks({ [hostname]: mark });
-  }
-
-  checkMarkItems(hostname: string, url: string) {
-    const mark = this.getMarks()[hostname];
-    if (!mark) return false;
-
-    const items = mark.items;
-    if (Check.isEmpty.object(items)) return false;
-
-    for (const item of Object.values(items)) {
-      if (item.urlString === url) return true;
-    }
-
-    return false;
   }
 
   getVersion(): FollowMarkVersion {
