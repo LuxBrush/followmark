@@ -9,10 +9,10 @@ chrome.tabs.onUpdated.addListener(async (_, changeInfo, tab) => {
     if (!tab.url) return;
 
     const mark = state.getMark(tab.url);
-    const foundItem = state.getMarkItem(tab.url);
+    const key = extractKeyID(tab.title, tab.url);
 
-    if (mark && foundItem) {
-      const [key, currentItem] = foundItem;
+    if (mark && mark.items[key]) {
+      const currentItem = mark.items[key];
 
       const updatedItem: Item = {
         bookmarkID: currentItem.bookmarkID,
