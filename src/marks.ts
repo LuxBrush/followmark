@@ -133,6 +133,7 @@ function getURL(tab: chrome.tabs.Tab) {
 async function getFavIcon(tab: chrome.tabs.Tab) {
   const defaultIcon = "/icons/inactive.png";
   const favIconUrl = tab.favIconUrl ?? defaultIcon;
+  const url = getURL(tab);
   // If favIconUrl is a data URL, try to get the favicon from the page's head
   if (favIconUrl.startsWith("data:")) {
     const tabId = tab.id;
@@ -149,6 +150,8 @@ async function getFavIcon(tab: chrome.tabs.Tab) {
 
       if (results && results[0]?.result) {
         return results[0].result as string;
+      } else {
+        return `${url.protocol}//${url.hostname}/favicon.ico`;
       }
     } catch (error) {
       console.error("Failed to fetch favicon:", error);
