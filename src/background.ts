@@ -5,22 +5,20 @@ const { active, inactive } = Icons;
 
 chrome.tabs.onUpdated.addListener(async (_, changeInfo, tab) => {
   const state = await stateAwait;
-  if (changeInfo.status === "complete") {
-    if (!tab.url) return;
-
+  if (changeInfo.status === "complete" && tab.url) {
     const mark = state.getMark(tab.url);
     const key = extractKeyID(tab.title, tab.url);
 
     if (mark && mark.items[key]) {
-      const currentItem = mark.items[key];
-
-      const updatedItem: Item = {
-        bookmarkID: currentItem.bookmarkID,
-        title: tab.title ?? "untitled",
-        urlString: tab.url,
-      };
-
-      await state.updateMark(mark.hostname, { items: { [key]: updatedItem } });
+      await state.updateMark(mark.hostname, {
+        items: {
+          [key]: {
+            ...mark.items[key],
+            title: tab.title ?? "untitled",
+            urlString: tab.url,
+          },
+        },
+      });
 
       await chrome.action.setIcon({ path: mark.favIconUrl || active });
     } else {
