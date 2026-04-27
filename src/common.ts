@@ -5,10 +5,10 @@ export const Icons = {
   inactive: { "120": "icons/inactive.png" },
 };
 
-export function notifyMessage(title: string, message: string) {
+export function notifyMessage(iconUrl: "icons/active.png", title: string, message: string) {
   chrome.notifications.create({
     type: "basic",
-    iconUrl: "icons/active.png",
+    iconUrl,
     title,
     message,
     priority: 2,
