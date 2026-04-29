@@ -10,8 +10,8 @@ chrome.tabs.onUpdated.addListener(async (_, changeInfo, tab) => {
     const foundItem = state.getMarkItem(tab.url, tab.title);
 
     if (mark && foundItem) {
-      const [key, item] = foundItem;
-      await state.updateMark(mark.hostname, {
+      const [hostname, key, item] = foundItem;
+      await state.updateMark(hostname, {
         items: {
           [key]: {
             ...item,
