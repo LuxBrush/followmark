@@ -7,10 +7,10 @@ chrome.tabs.onUpdated.addListener(async (_, changeInfo, tab) => {
   const state = await stateAwait;
   if (changeInfo.status === "complete" && tab.url) {
     const mark = state.getMark(tab.url);
-    const foundItem = state.getMarkPage(tab.url, tab.title);
+    const foundPage = state.getMarkPage(tab.url, tab.title);
 
-    if (mark && foundItem) {
-      const [hostname, pageKey, page] = foundItem;
+    if (mark && foundPage) {
+      const [hostname, pageKey, page] = foundPage;
       await state.updateMark(hostname, {
         pages: {
           [pageKey]: {
