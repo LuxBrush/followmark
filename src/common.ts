@@ -70,7 +70,7 @@ export class FollowMarkState {
     }
   }
 
-  getMarkItem(href: string, key?: string): [string, Item] | null {
+  getMarkItem(href: string, title?: string, key?: string): [string, Item] | null {
     try {
       const url = new URL(href);
       const mark = this.getMarks()[url.hostname];
@@ -78,6 +78,14 @@ export class FollowMarkState {
       if (!mark || !mark.items) return null;
 
       if (key && mark.items[key]) return [key, mark.items[key]];
+
+      if (title) {
+        const extractedKey = extractKeyID(title, href);
+
+        if (mark.items[extractedKey]) {
+          return [extractedKey, mark.items[extractedKey]];
+        }
+      }
 
       const foundItem = Object.entries(mark.items).find(([_, item]) => item.urlString === href);
       return foundItem ?? null;
