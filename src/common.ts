@@ -70,30 +70,30 @@ export class FollowMarkState {
     }
   }
 
-  getMarkItem(href: string, title?: string, key?: string): [string, string, Item] | null {
+  getMarkPage(href: string, title?: string, pageKey?: string): [string, string, Page] | null {
     try {
       const url = new URL(href);
       const mark = this.getMarks()[url.hostname];
 
-      if (!mark || !mark.items) return null;
+      if (!mark || !mark.pages) return null;
 
-      if (key && mark.items[key]) return [mark.hostname, key, mark.items[key]];
+      if (pageKey && mark.pages[pageKey]) return [mark.hostname, pageKey, mark.pages[pageKey]];
 
       if (title) {
-        const extractedKey = extractKeyID(title, href);
+        const extractedPageKey = extractPageKey(title, href);
 
-        if (mark.items[extractedKey]) {
-          return [mark.hostname, extractedKey, mark.items[extractedKey]];
+        if (mark.pages[extractedPageKey]) {
+          return [mark.hostname, extractedPageKey, mark.pages[extractedPageKey]];
         }
       }
 
-      const foundItem = Object.entries(mark.items).find(([_, item]) => item.urlString === href);
-      if (foundItem) {
-        return [mark.hostname, foundItem[0], foundItem[1]] as [string, string, Item];
+      const foundPage = Object.entries(mark.pages).find(([_, page]) => page.urlString === href);
+      if (foundPage) {
+        return [mark.hostname, foundPage[0], foundPage[1]] as [string, string, Page];
       }
       return null;
     } catch (error) {
-      console.error(`Error in getting item from href:${href}`, error);
+      console.error(`Error in getting page from href:${href}`, error);
       return null;
     }
   }
@@ -102,14 +102,14 @@ export class FollowMarkState {
     const folderID = await this.getFollowMarkFolderID();
 
     for (const mark of Object.values(followMarks)) {
-      for (const [key, item] of Object.entries(mark.items)) {
-        if (!item.bookmarkID) {
+      for (const [key, page] of Object.entries(mark.pages)) {
+        if (!page.bookmarkID) {
           const newBookmark = await chrome.bookmarks.create({
             parentId: folderID,
-            title: item.title,
-            url: item.urlString,
+            title: page.title,
+            url: page.urlString,
           });
-          mark.items[key].bookmarkID = newBookmark.id;
+          mark.pages[key].bookmarkID = newBookmark.id;
         }
       }
     }
@@ -129,22 +129,22 @@ export class FollowMarkState {
         current[hostname] = {
           ...current[hostname],
           ...partialMark,
-          items: { ...current[hostname].items, ...partialMark.items },
+          pages: { ...current[hostname].pages, ...partialMark.pages },
         };
 
-        if (partialMark.items) {
-          for (const key in partialMark.items) {
-            const item = current[hostname].items[key];
-            if (item.bookmarkID) {
-              await chrome.bookmarks.update(item.bookmarkID, { title: item.title, url: item.urlString });
+        if (partialMark.pages) {
+          for (const key in partialMark.pages) {
+            const page = current[hostname].pages[key];
+            if (page.bookmarkID) {
+              await chrome.bookmarks.update(page.bookmarkID, { title: page.title, url: page.urlString });
             } else {
               const folderID = await this.getFollowMarkFolderID();
               const newBookmark = await chrome.bookmarks.create({
                 parentId: folderID,
-                title: item.title,
-                url: item.urlString,
+                title: page.title,
+                url: page.urlString,
               });
-              current[hostname].items[key].bookmarkID = newBookmark.id;
+              current[hostname].pages[key].bookmarkID = newBookmark.id;
             }
           }
         }
@@ -189,9 +189,9 @@ export class FollowMarkState {
   }
 }
 
-export async function writeStorage(items: FollowMarkStorage): Promise<void> {
+export async function writeStorage(data: FollowMarkStorage): Promise<void> {
   // await chrome.storage.sync.set(items);
-  await chrome.storage.local.set(items);
+  await chrome.storage.local.set(data);
 }
 
 export async function getStorage(): Promise<FollowMarkStorage> {
@@ -207,7 +207,7 @@ function compareVersions(currentVersion: string, storedVersion: string) {
   return currentVersion.localeCompare(storedVersion, undefined, { numeric: true }) > 0;
 }
 
-export function extractKeyID(title?: string, href?: string) {
+export function extractPageKey(title?: string, href?: string) {
   const defaultKey = crypto.randomUUID();
   if (title) {
     if (title.includes("Tapas")) {

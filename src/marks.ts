@@ -1,5 +1,5 @@
 import { buildBookmarkList, findBookmark, findBookmarks } from "./bookmarks.js";
-import { extractKeyID, FollowMarkState, notifyMessage } from "./common.js";
+import { extractPageKey, FollowMarkState, notifyMessage } from "./common.js";
 
 /**
  * Creates or updates a follow mark for the currently active tab.
@@ -16,7 +16,7 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
 
   const { url, title, favIconUrl } = info;
   const { hostname, href } = url;
-  const itemID = extractKeyID(title, href);
+  const pageKey = extractPageKey(title, href);
 
   if (bookmarkID) {
     const bookmarks = await chrome.bookmarks.get(bookmarkID);
@@ -30,12 +30,12 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
       return;
     }
     const bookmarkUrl = new URL(bookmark.url);
-    const bookmarkKey = extractKeyID(bookmark.title, bookmarkUrl.href);
+    const bookmarkKey = extractPageKey(bookmark.title, bookmarkUrl.href);
 
     await state.setMark(bookmarkUrl.hostname, {
       hostname: bookmarkUrl.hostname,
       favIconUrl: favIconUrl,
-      items: { [bookmarkKey]: { bookmarkID, title: bookmark.title, urlString: bookmarkUrl.href } },
+      pages: { [bookmarkKey]: { bookmarkID, title: bookmark.title, urlString: bookmarkUrl.href } },
     });
     notifyMessage("FollowMark Added", `Mark added for bookmark: ${bookmark.title}`);
     return;
@@ -51,8 +51,8 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
     await state.setMark(hostname, {
       hostname,
       favIconUrl,
-      items: {
-        [itemID]: {
+      pages: {
+        [pageKey]: {
           bookmarkID: bookmark[0].id,
           title,
           urlString: href,
@@ -65,14 +65,14 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
 
   const bookmarks = await findBookmarks(hostname);
   if (bookmarks.length > 0) {
-    const foundItem = state.getMarkItem(href);
-    if (!foundItem) {
+    const foundPage = state.getMarkPage(href);
+    if (!foundPage) {
       await state.updateMark(hostname, {
         hostname,
         favIconUrl,
-        items: { [itemID]: { bookmarkID: "", title, urlString: href } },
+        pages: { [pageKey]: { bookmarkID: "", title, urlString: href } },
       });
-      notifyMessage("FollowMark Item Added", `Mark item added for: ${hostname} - ${title}`);
+      notifyMessage("FollowMark Page Added", `Mark page added for: ${hostname} Page: ${title}`);
       return;
     }
     buildBookmarkList(state, bookmarks);
@@ -82,7 +82,7 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
   await state.setMark(hostname, {
     hostname,
     favIconUrl,
-    items: { [itemID]: { bookmarkID: "", title, urlString: href } },
+    pages: { [pageKey]: { bookmarkID: "", title, urlString: href } },
   });
   notifyMessage("FollowMark Added", `New mark added for: ${title}`);
 }

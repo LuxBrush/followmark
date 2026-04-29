@@ -1,4 +1,4 @@
-type Item = {
+type Page = {
   bookmarkID: string;
   title: string;
   urlString: string;
@@ -7,7 +7,7 @@ type Item = {
 type Mark = {
   hostname: string;
   favIconUrl: string;
-  items: Record<string, Item>;
+  pages: Record<string, Page>;
 };
 
 type FollowMarks = Record<string, Mark>;

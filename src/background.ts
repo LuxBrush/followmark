@@ -1,4 +1,4 @@
-import { extractKeyID, FollowMarkState, Icons } from "./common.js";
+import { extractPageKey, FollowMarkState, Icons } from "./common.js";
 
 const stateAwait = FollowMarkState.create();
 const { active, inactive } = Icons;
@@ -7,14 +7,14 @@ chrome.tabs.onUpdated.addListener(async (_, changeInfo, tab) => {
   const state = await stateAwait;
   if (changeInfo.status === "complete" && tab.url) {
     const mark = state.getMark(tab.url);
-    const foundItem = state.getMarkItem(tab.url, tab.title);
+    const foundItem = state.getMarkPage(tab.url, tab.title);
 
     if (mark && foundItem) {
-      const [hostname, key, item] = foundItem;
+      const [hostname, pageKey, page] = foundItem;
       await state.updateMark(hostname, {
-        items: {
-          [key]: {
-            ...item,
+        pages: {
+          [pageKey]: {
+            ...page,
             title: tab.title ?? "untitled",
             urlString: tab.url,
           },
