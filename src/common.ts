@@ -1,4 +1,4 @@
-import { Check, Get } from "./check.js";
+import { Check } from "./check.js";
 
 export const Icons = {
   active: { "120": "icons/active.png" },

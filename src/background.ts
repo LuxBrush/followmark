@@ -1,4 +1,4 @@
-import { extractPageKey, FollowMarkState, Icons } from "./common.js";
+import { FollowMarkState, Icons } from "./common.js";
 
 const stateAwait = FollowMarkState.create();
 const { active, inactive } = Icons;
