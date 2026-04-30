@@ -173,19 +173,17 @@ export class FollowMarkState {
   async checkVersion() {
     const currentVersion = chrome.runtime.getManifest().version as string;
     const storedVersion = this.getVersion();
-    const versionElement = Get.elementByID("version");
 
     if (storedVersion === "0.0.0" || compareVersions(currentVersion, storedVersion)) {
       await this.setVersion(currentVersion);
 
       if (storedVersion !== "0.0.0") {
-        const updateMessageElement = Get.elementByID("update-message");
-        updateMessageElement.textContent = "Add-on had been updated!";
-        versionElement.parentNode?.insertBefore(updateMessageElement, versionElement.nextSibling);
+        notifyMessage("FollowMark Updated", `Add-on has been updated to ${this.getVersion()}`);
+        return currentVersion;
       }
+      return currentVersion;
     }
-
-    versionElement.textContent = `Version: ${this.getVersion()}`;
+    return currentVersion;
   }
 }
 
