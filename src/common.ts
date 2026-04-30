@@ -80,7 +80,7 @@ export class FollowMarkState {
       if (pageKey && mark.pages[pageKey]) return [mark.hostname, pageKey, mark.pages[pageKey]];
 
       if (title) {
-        const extractedPageKey = extractPageKey(title, href);
+        const extractedPageKey = extractPageKey(mark.hostname, title, href);
 
         if (mark.pages[extractedPageKey]) {
           return [mark.hostname, extractedPageKey, mark.pages[extractedPageKey]];
@@ -208,43 +208,32 @@ function compareVersions(currentVersion: string, storedVersion: string) {
 }
 
 const extractors: PageKeyExtractor[] = [
-  (title) => {
-    if (!title?.includes("Tapas")) return null;
+  (_hostname, title) => {
+    if (!title.includes("Tapas")) return null;
     const matches = title.match(/Read\s+(.*?)(?:\s*(?:::{1,2}|\|))/);
-    return matches ? sanitizeKey(matches[1]) : null;
+    return matches ? generateHash(matches[1]) : null;
   },
-  (_, href) => {
-    if (!href?.includes("webtoons")) return null;
+  (_hostname, _title, href) => {
+    if (!href.includes("webtoons")) return null;
     const matches = href.match(/webtoons\.com\/.*?\/(?:.*?\/(.*?)\/|.*?\/(.*?)$)/);
-    return matches ? sanitizeKey(matches[1]) : null;
-  },
-  (_, href) => {
-    if (!href) return null;
-    if (!URL.canParse(href)) return null;
-    const url = new URL(href);
-    return sanitizeKey(url.hostname);
+    return matches ? generateHash(matches[1]) : null;
   },
 ];
 
-export function extractPageKey(title?: string, href?: string) {
-  const defaultKey = crypto.randomUUID();
+export function extractPageKey(hostname: string, title: string, href: string) {
   for (const extractor of extractors) {
-    const key = extractor(title, href);
+    const key = extractor(hostname, title, href);
     if (key !== null) return key;
   }
-  return defaultKey;
+  return generateHash(hostname);
 }
 
-function sanitizeKey(text: string) {
-  const sanitized = text
-    .replace(/[^a-zA-Z0-9\s_]/g, "_")
-    .trim()
-    .replace(/\s+/g, "_")
-    .toLowerCase();
-
-  if (!sanitized || /^\d/.test(sanitized)) {
-    return `_${sanitized || "key"}`;
+function generateHash(input: string) {
+  let hash = 0;
+  for (let i = 0; i < input.length; i++) {
+    const code = input.charCodeAt(i);
+    hash = (hash << 5) - hash + code;
+    hash = hash & hash;
   }
-
-  return sanitized;
+  return Math.abs(hash).toString(36);
 }

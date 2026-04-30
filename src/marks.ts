@@ -16,7 +16,7 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
 
   const { url, title, favIconUrl } = info;
   const { hostname, href } = url;
-  const pageKey = extractPageKey(title, href);
+  const pageKey = extractPageKey(hostname, title, href);
 
   if (bookmarkID) {
     const bookmarks = await chrome.bookmarks.get(bookmarkID);
@@ -30,7 +30,7 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
       return;
     }
     const bookmarkUrl = new URL(bookmark.url);
-    const bookmarkKey = extractPageKey(bookmark.title, bookmarkUrl.href);
+    const bookmarkKey = extractPageKey(bookmarkUrl.hostname, bookmark.title, bookmarkUrl.href);
 
     await state.setMark(bookmarkUrl.hostname, {
       hostname: bookmarkUrl.hostname,
