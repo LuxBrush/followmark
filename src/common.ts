@@ -207,44 +207,32 @@ function compareVersions(currentVersion: string, storedVersion: string) {
   return currentVersion.localeCompare(storedVersion, undefined, { numeric: true }) > 0;
 }
 
+const extractors: PageKeyExtractor[] = [
+  (title) => {
+    if (!title?.includes("Tapas")) return null;
+    const matches = title.match(/Read\s+(.*?)(?:\s*(?:::{1,2}|\|))/);
+    return matches ? sanitizeKey(matches[1]) : null;
+  },
+  (_, href) => {
+    if (!href?.includes("webtoons")) return null;
+    const matches = href.match(/webtoons\.com\/.*?\/(?:.*?\/(.*?)\/|.*?\/(.*?)$)/);
+    return matches ? sanitizeKey(matches[1]) : null;
+  },
+  (_, href) => {
+    if (!href) return null;
+    if (!URL.canParse(href)) return null;
+    const url = new URL(href);
+    return sanitizeKey(url.hostname);
+  },
+];
+
 export function extractPageKey(title?: string, href?: string) {
   const defaultKey = crypto.randomUUID();
-  if (title) {
-    if (title.includes("Tapas")) {
-      const titleKey = extractTitleKey(title, defaultKey);
-      return titleKey;
-    }
-  }
-  if (href) {
-    const hrefKey = extractHrefKey(href, defaultKey);
-    return hrefKey;
+  for (const extractor of extractors) {
+    const key = extractor(title, href);
+    if (key !== null) return key;
   }
   return defaultKey;
-}
-
-function extractTitleKey(title: string, defaultKey: string) {
-  const matches = title.match(/Read\s+(.*?)(?:\s*(?:::{1,2}|\|))/);
-  if (matches) {
-    return sanitizeKey(matches[1]);
-  }
-  return defaultKey;
-}
-
-function extractHrefKey(href: string, defaultKey: string) {
-  try {
-    const url = new URL(href);
-
-    if (href.includes("webtoons")) {
-      const webtoonsMatches = href.match(/webtoons\.com\/.*?\/(?:.*?\/(.*?)\/|.*?\/(.*?)$)/);
-      if (webtoonsMatches) {
-        return sanitizeKey(webtoonsMatches[1]);
-      }
-    }
-
-    return sanitizeKey(url.hostname);
-  } catch (error) {
-    return defaultKey;
-  }
 }
 
 function sanitizeKey(text: string) {

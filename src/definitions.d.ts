@@ -20,3 +20,5 @@ type FollowMarkStorage = {
 };
 
 type Versions = [number, number, number];
+
+type PageKeyExtractor = (title?: string, href?: string) => string | null;
