@@ -205,16 +205,29 @@ function compareVersions(currentVersion: string, storedVersion: string) {
   return currentVersion.localeCompare(storedVersion, undefined, { numeric: true }) > 0;
 }
 
+const TAPAS_MATCH = /Read\s+(.*?)(?:\s*(?:::{1,2}|\|))/;
+const WEBTOONS_MATCH = /\/[^/]+\/[^/]+\/([^/]+)\//;
+const LIST_MATCH = /[?&]list=([^?&]+)/;
+const VIDEO_MATCH = /[?&]v=([^?&]+)/;
+
 const extractors: PageKeyExtractor[] = [
   (_hostname, title) => {
     if (!title.includes("Tapas")) return null;
-    const matches = title.match(/Read\s+(.*?)(?:\s*(?:::{1,2}|\|))/);
+    const matches = title.match(TAPAS_MATCH);
     return matches ? generateHash(matches[1]) : null;
   },
   (_hostname, _title, href) => {
-    if (!href.includes("webtoons")) return null;
-    const matches = href.match(/webtoons\.com\/.*?\/(?:.*?\/(.*?)\/|.*?\/(.*?)$)/);
+    if (!href.includes("webtoons.com")) return null;
+    const matches = href.match(WEBTOONS_MATCH);
     return matches ? generateHash(matches[1]) : null;
+  },
+  (_hostname, _title, href) => {
+    if (!href.includes("youtube.com")) return null;
+    const listMatches = href.match(LIST_MATCH);
+    if (listMatches) return listMatches[1];
+
+    const videoMatches = href.match(VIDEO_MATCH);
+    return videoMatches ? videoMatches[1] : null;
   },
 ];
 
