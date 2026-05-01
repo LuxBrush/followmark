@@ -123,35 +123,56 @@ export class FollowMarkState {
 
   async updateMarks(marks: Record<string, Partial<Mark>>) {
     const current = this.getMarks();
+    const folderID = await this.getFollowMarkFolderID();
+
+    const bookmarkActions: Promise<void>[] = [];
 
     for (const [hostname, partialMark] of Object.entries(marks)) {
-      if (current[hostname]) {
-        current[hostname] = {
-          ...current[hostname],
-          ...partialMark,
-          pages: { ...current[hostname].pages, ...partialMark.pages },
-        };
+      if (!current[hostname]) {
+        notifyMessage("FollowMark Update Error", `Attempted to update non-existent mark for ${hostname}`);
+        continue;
+      }
 
-        if (partialMark.pages) {
-          for (const key in partialMark.pages) {
-            const page = current[hostname].pages[key];
-            if (page.bookmarkID) {
-              await chrome.bookmarks.update(page.bookmarkID, { title: page.title, url: page.urlString });
-            } else {
-              const folderID = await this.getFollowMarkFolderID();
-              const newBookmark = await chrome.bookmarks.create({
-                parentId: folderID,
-                title: page.title,
-                url: page.urlString,
-              });
-              current[hostname].pages[key].bookmarkID = newBookmark.id;
-            }
+      current[hostname] = {
+        ...current[hostname],
+        ...partialMark,
+        pages: { ...current[hostname].pages, ...partialMark.pages },
+      };
+
+      if (partialMark.pages) {
+        for (const key in partialMark.pages) {
+          const page = current[hostname].pages[key];
+          if (page.bookmarkID) {
+            bookmarkActions.push(
+              chrome.bookmarks
+                .update(page.bookmarkID, {
+                  title: page.title,
+                  url: page.urlString,
+                })
+                .then(() => {}),
+            );
+          } else {
+            bookmarkActions.push(
+              (async () => {
+                const newBookmark = await chrome.bookmarks.create({
+                  parentId: folderID,
+                  title: page.title,
+                  url: page.urlString,
+                });
+                page.bookmarkID = newBookmark.id;
+              })(),
+            );
           }
         }
-      } else {
-        notifyMessage("FollowMark Update Error", `Attempted to update non-existent mark for ${hostname}`);
       }
     }
+
+    const results = await Promise.allSettled(bookmarkActions);
+    results.forEach((result, i) => {
+      if (result.status === "rejected") {
+        console.error(`Failed to update or create bookmark ${i}:`, result.reason);
+      }
+    });
 
     this.followMarkStorage.followMarks = current;
     await writeStorage(this.followMarkStorage);
