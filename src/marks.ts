@@ -34,8 +34,14 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
 
     await state.setMark(bookmarkUrl.hostname, {
       hostname: bookmarkUrl.hostname,
-      favIconUrl,
-      pages: { [bookmarkKey]: { bookmarkID, title: bookmark.title, urlString: bookmarkUrl.href } },
+      pages: {
+        [bookmarkKey]: {
+          bookmarkID,
+          title: bookmark.title,
+          urlString: bookmarkUrl.href,
+          favIconUrl,
+        },
+      },
     });
     notifyMessage("FollowMark Added", `Mark added for bookmark: ${bookmark.title}`, favIconUrl);
     return;
@@ -50,12 +56,12 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
 
     await state.setMark(hostname, {
       hostname,
-      favIconUrl,
       pages: {
         [pageKey]: {
           bookmarkID: bookmark[0].id,
           title,
           urlString: href,
+          favIconUrl,
         },
       },
     });
@@ -69,8 +75,14 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
     if (!foundPage) {
       await state.updateMark(hostname, {
         hostname,
-        favIconUrl,
-        pages: { [pageKey]: { bookmarkID: "", title, urlString: href } },
+        pages: {
+          [pageKey]: {
+            bookmarkID: "",
+            title,
+            urlString: href,
+            favIconUrl,
+          },
+        },
       });
       notifyMessage("FollowMark Page Added", `Mark page added for: ${hostname} Page: ${title}`, favIconUrl);
       return;
@@ -81,8 +93,14 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
 
   await state.setMark(hostname, {
     hostname,
-    favIconUrl,
-    pages: { [pageKey]: { bookmarkID: "", title, urlString: href } },
+    pages: {
+      [pageKey]: {
+        bookmarkID: "",
+        title,
+        urlString: href,
+        favIconUrl,
+      },
+    },
   });
   notifyMessage("FollowMark Added", `New mark added for: ${title}`, favIconUrl);
 }

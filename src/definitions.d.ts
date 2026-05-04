@@ -2,11 +2,11 @@ type Page = {
   bookmarkID: string;
   title: string;
   urlString: string;
+  favIconUrl: string;
 };
 
 type Mark = {
   hostname: string;
-  favIconUrl: string;
   pages: Record<string, Page>;
 };
 

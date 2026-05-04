@@ -21,7 +21,7 @@ chrome.tabs.onUpdated.addListener(async (_, changeInfo, tab) => {
         },
       });
 
-      await chrome.action.setIcon({ path: mark.favIconUrl || active });
+      await chrome.action.setIcon({ path: mark.pages[pageKey].favIconUrl || active });
     } else {
       await chrome.action.setIcon({ path: inactive });
     }
@@ -34,9 +34,9 @@ chrome.tabs.onActivated.addListener(async (activateTab) => {
     const tab = await chrome.tabs.get(activateTab.tabId);
     if (!tab.url) return;
 
-    const mark = state.getMark(tab.url);
-    if (mark) {
-      await chrome.action.setIcon({ path: mark.favIconUrl || active });
+    const foundPage = state.getMarkPage(tab.url);
+    if (foundPage) {
+      await chrome.action.setIcon({ path: foundPage[2].favIconUrl || active });
     } else {
       await chrome.action.setIcon({ path: inactive });
     }
