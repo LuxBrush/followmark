@@ -47,10 +47,29 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
     return;
   }
 
-  const bookmark = await findBookmark(href);
-  if (bookmark.length > 0) {
-    if (bookmark.length > 1) {
-      buildBookmarkList(state, bookmark);
+  const foundBookmark = await findBookmark(href);
+  if (foundBookmark.length > 0) {
+    if (foundBookmark.length > 1) {
+      buildBookmarkList(state, foundBookmark);
+      return;
+    }
+    const [bookmark] = foundBookmark;
+    const foundBookmarkID = bookmark.id;
+
+    if (state.getMarkPage(href)) {
+      await state.updateMark(hostname, {
+        hostname,
+        pages: {
+          [pageKey]: {
+            bookmarkID: foundBookmarkID,
+            title,
+            urlString: href,
+            favIconUrl,
+          },
+        },
+      });
+
+      notifyMessage("FollowMark Updated", `Mark updated for bookmark: ${title}`, favIconUrl);
       return;
     }
 
@@ -58,7 +77,7 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
       hostname,
       pages: {
         [pageKey]: {
-          bookmarkID: bookmark[0].id,
+          bookmarkID: foundBookmarkID,
           title,
           urlString: href,
           favIconUrl,
