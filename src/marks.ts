@@ -126,6 +126,16 @@ function getURL(tab: chrome.tabs.Tab) {
   }
 }
 
+function getOgImage() {
+  const ogImage = document.querySelector('meta[property="og:image"]');
+  return ogImage ? ogImage.getAttribute("content") || "" : "";
+}
+
+function getIcon() {
+  const link = document.querySelector('link[rel*="icon"]') as HTMLLinkElement | null;
+  return link ? link.href : "";
+}
+
 /**
  * Retrieves the favicon URL for a tab, attempting to find the icon from the page content if necessary.
  * @param tab - The Chrome tab object.
@@ -140,13 +150,15 @@ async function getFavIcon(tab: chrome.tabs.Tab) {
     const tabId = tab.id;
     if (!tabId) return defaultIcon;
 
+    let func = getIcon;
+    if (url.hostname.includes("tapas") || url.hostname.includes("webtoons")) {
+      func = getOgImage;
+    }
+
     try {
       const results = await chrome.scripting.executeScript({
         target: { tabId },
-        func: () => {
-          const link = document.querySelector('link[rel*="icon"]') as HTMLLinkElement | null;
-          return link ? link.href : "";
-        },
+        func,
       });
 
       if (results && results[0]?.result) {
