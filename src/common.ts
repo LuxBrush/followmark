@@ -100,19 +100,32 @@ export class FollowMarkState {
 
   async setMarks(followMarks: FollowMarks) {
     const folderID = await this.getFollowMarkFolderID();
+    const bookmarkActions: Promise<void>[] = [];
 
     for (const mark of Object.values(followMarks)) {
       for (const [key, page] of Object.entries(mark.pages)) {
         if (!page.bookmarkID) {
-          const newBookmark = await chrome.bookmarks.create({
-            parentId: folderID,
-            title: page.title,
-            url: page.urlString,
-          });
-          mark.pages[key].bookmarkID = newBookmark.id;
+          bookmarkActions.push(
+            (async () => {
+              const newBookmark = await chrome.bookmarks.create({
+                parentId: folderID,
+                title: page.title,
+                url: page.urlString,
+              });
+              mark.pages[key].bookmarkID = newBookmark.id;
+            })(),
+          );
         }
       }
     }
+
+    const results = await Promise.allSettled(bookmarkActions);
+    results.forEach((result, i) => {
+      if (result.status === "rejected") {
+        console.error(`Failed to create bookmark ${i}:`, result.reason);
+      }
+    });
+
     this.followMarkStorage.followMarks = { ...this.followMarkStorage.followMarks, ...followMarks };
     await writeStorage(this.followMarkStorage);
   }
