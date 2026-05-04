@@ -131,7 +131,7 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
  */
 async function getInfoFromActiveTab() {
   const tab = await getActiveTab();
-  const url = getURL(tab);
+  const url = getURL(tab.url);
 
   const title = tab.title ?? "";
 
@@ -147,20 +147,16 @@ async function getActiveTab() {
 
 /**
  * Extracts the URL from a Chrome tab.
- * @param tab - The Chrome tab object.
+ * @param urlString - The URL string to parse.
  * @returns The parsed URL object or about:blank if invalid.
  */
-function getURL(tab: chrome.tabs.Tab) {
-  let stringURL = tab.url ?? "";
-
-  try {
-    const url = new URL(stringURL);
-
-    return url;
-  } catch (error) {
-    console.error("Url is malformed or an empty string:", stringURL);
-    return new URL("about:blank");
+function getURL(urlString: string | undefined) {
+  if (!urlString) {
+    throw new Error("Url string is undefined or null");
   }
+  const url = new URL(urlString);
+
+  return url;
 }
 
 function getOgImage() {
@@ -181,7 +177,7 @@ function getIcon() {
 async function getFavIcon(tab: chrome.tabs.Tab) {
   const defaultIcon = "/icons/inactive.png";
   const favIconUrl = tab.favIconUrl ?? defaultIcon;
-  const url = getURL(tab);
+  const url = getURL(tab.url);
   // If favIconUrl is a data URL, try to get the favicon from the page's head
   if (favIconUrl.startsWith("data:")) {
     const tabId = tab.id;
