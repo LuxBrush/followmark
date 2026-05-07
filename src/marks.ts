@@ -7,51 +7,20 @@ import { extractPageKey, FollowMarkState, notifyMessage } from "./common.js";
  * @returns Promise void
  */
 export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
-  const info = await getInfoFromActiveTab();
-
-  if (info.url.protocol === "about:") {
-    notifyMessage("Cannot create Mark", "Cannot create a mark for this tab.");
-    return;
-  }
-
-  const { url, title, favIconUrl } = info;
+  const { url, title, favIconUrl } = await getInfoFromActiveTab();
   const { hostname, href } = url;
   const pageKey = extractPageKey(hostname, title, href);
 
   if (bookmarkID) {
-    const bookmarks = await chrome.bookmarks.get(bookmarkID);
-    if (bookmarks.length === 0) {
-      notifyMessage("Bookmark not found", `Bookmark for ID: ${bookmarkID} was not found.`);
-      return;
-    }
-    const [bookmark] = bookmarks;
-    if (!bookmark.url) {
-      notifyMessage("Cannot create Mark", "Cannot create a mark for this bookmark.");
-      return;
-    }
-    const bookmarkUrl = new URL(bookmark.url);
-    const bookmarkKey = extractPageKey(bookmarkUrl.hostname, bookmark.title, bookmarkUrl.href);
-
-    await state.setMark(bookmarkUrl.hostname, {
-      hostname: bookmarkUrl.hostname,
-      pages: {
-        [bookmarkKey]: {
-          bookmarkID,
-          title: bookmark.title,
-          urlString: bookmarkUrl.href,
-          favIconUrl,
-        },
-      },
-    });
-    notifyMessage("FollowMark Added", `Mark added for bookmark: ${bookmark.title}`, favIconUrl);
-    return;
+    await markFromBookmark(state, bookmarkID, favIconUrl);
+    return true;
   }
 
   const foundBookmark = await findBookmark(href);
   if (foundBookmark.length > 0) {
     if (foundBookmark.length > 1) {
       buildBookmarkList(state, foundBookmark);
-      return;
+      return false;
     }
     const [bookmark] = foundBookmark;
     const foundBookmarkID = bookmark.id;
@@ -70,7 +39,7 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
       });
 
       notifyMessage("FollowMark Updated", `Mark updated for bookmark: ${title}`, favIconUrl);
-      return;
+      return true;
     }
 
     await state.setMark(hostname, {
@@ -85,29 +54,32 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
       },
     });
     notifyMessage("FollowMark Added", `Mark added for bookmark: ${title}`, favIconUrl);
-    return;
+    return true;
   }
 
   const bookmarks = await findBookmarks(hostname);
   if (bookmarks.length > 0) {
-    const foundPage = state.getMarkPage(href);
-    if (!foundPage) {
-      await state.updateMark(hostname, {
-        hostname,
-        pages: {
-          [pageKey]: {
-            bookmarkID: "",
-            title,
-            urlString: href,
-            favIconUrl,
+    const mark = state.getMark(href);
+    if (mark) {
+      const foundPage = state.getMarkPage(href);
+      if (!foundPage) {
+        await state.updateMark(hostname, {
+          hostname,
+          pages: {
+            [pageKey]: {
+              bookmarkID: "",
+              title,
+              urlString: href,
+              favIconUrl,
+            },
           },
-        },
-      });
-      notifyMessage("FollowMark Page Added", `Mark page added for: ${hostname} Page: ${title}`, favIconUrl);
-      return;
+        });
+        notifyMessage("FollowMark Page Added", `Mark page added for: ${hostname} Page: ${title}`, favIconUrl);
+        return true;
+      }
     }
     buildBookmarkList(state, bookmarks);
-    return;
+    return false;
   }
 
   await state.setMark(hostname, {
@@ -122,6 +94,19 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
     },
   });
   notifyMessage("FollowMark Added", `New mark added for: ${title}`, favIconUrl);
+  return true;
+}
+
+export function getInfoFromBookmark(bookmark: chrome.bookmarks.BookmarkTreeNode) {
+  const { url, title } = bookmark;
+  if (!url) {
+    notifyMessage("No URL in bookmark", "No URL in bookmark, this might be a folder.");
+    return null;
+  }
+  const bookmarkUrl = new URL(url);
+  const { hostname, href } = bookmarkUrl;
+  const bookmarkKey = extractPageKey(hostname, title, href);
+  return { urlString: href, hostname, title, bookmarkKey };
 }
 
 /**
@@ -206,4 +191,53 @@ async function getFavIcon(tab: chrome.tabs.Tab) {
   }
 
   return favIconUrl;
+}
+
+export async function markFromBookmark(state: FollowMarkState, bookmarkID: string, favIconUrl: string) {
+  const bookmarks = await chrome.bookmarks.get(bookmarkID);
+  if (bookmarks.length === 0) {
+    notifyMessage("Bookmark not found", `Bookmark for ID: ${bookmarkID} was not found`);
+    return;
+  }
+
+  const [bookmark] = bookmarks;
+  const bookmarkInfo = getInfoFromBookmark(bookmark);
+  if (bookmarkInfo) {
+    const { urlString, hostname, title, bookmarkKey } = bookmarkInfo;
+    const bookmarkMark: Mark = {
+      hostname,
+      pages: {
+        [bookmarkKey]: {
+          bookmarkID,
+          title,
+          urlString,
+          favIconUrl,
+        },
+      },
+    };
+
+    const mark = state.getMark(urlString);
+    if (mark) {
+      const foundPageInfo = state.getMarkPage(urlString, undefined, bookmarkKey);
+      if (!foundPageInfo) {
+        await state.updateMark(hostname, bookmarkMark);
+        notifyMessage("FollowMark Updated", `Mark page added for: ${hostname} Page: ${title}`, favIconUrl);
+        return;
+      }
+      if (foundPageInfo.page.bookmarkID !== bookmarkID) {
+        const foundBookmark = await findBookmark(urlString);
+        const match = foundBookmark.find((bookmark) => bookmark.id === foundPageInfo.page.bookmarkID);
+        if (!match) {
+          await state.updateMark(hostname, bookmarkMark);
+          notifyMessage("FollowMark Updated", `Mark update for: ${title}`, favIconUrl);
+          return;
+        }
+        return;
+      }
+      return;
+    }
+
+    await state.setMark(hostname, bookmarkMark);
+    notifyMessage("FollowMark Added", `New Mark added for: ${title}`, favIconUrl);
+  }
 }

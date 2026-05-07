@@ -9,8 +9,8 @@ async function Main() {
 
   const mainButton = buildElement("button", { textContent: "Make FollowMark" }, "stage");
   mainButton.onclick = async () => {
-    await MakeMark(state);
-    window.close();
+    const done = await MakeMark(state);
+    if (done) window.close();
   };
 
   const version = Get.elementByID("version");
