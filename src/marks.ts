@@ -4,7 +4,7 @@ import { extractPageKey, FollowMarkState, notifyMessage } from "./common.js";
 /**
  * Creates or updates a follow mark for the currently active tab.
  * Extracts tab information and saves it to local storage.
- * @returns Promise void
+ * @returns Promise resolving to true if mark was created/updated, false otherwise
  */
 export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
   const { url, title, favIconUrl } = await getInfoFromActiveTab();
@@ -22,37 +22,31 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
       buildBookmarkList(state, foundBookmark);
       return false;
     }
-    const [bookmark] = foundBookmark;
-    const foundBookmarkID = bookmark.id;
 
-    if (state.getMarkPage(href)) {
-      await state.updateMark(hostname, {
-        hostname,
-        pages: {
-          [pageKey]: {
-            bookmarkID: foundBookmarkID,
-            title,
-            urlString: href,
-            favIconUrl,
-          },
-        },
-      });
-
-      notifyMessage("FollowMark Updated", `Mark updated for bookmark: ${title}`, favIconUrl);
-      return true;
-    }
-
-    await state.setMark(hostname, {
+    const bookmarkMark: Mark = {
       hostname,
       pages: {
         [pageKey]: {
-          bookmarkID: foundBookmarkID,
+          bookmarkID: foundBookmark[0].id,
           title,
           urlString: href,
           favIconUrl,
         },
       },
-    });
+    };
+
+    const mark = state.getMark(href);
+    if (mark) {
+      if (!state.getMarkPage(href)) {
+        await state.updateMark(hostname, bookmarkMark);
+        notifyMessage("FollowMark Updated", `Mark updated for bookmark: ${title}`, favIconUrl);
+        return true;
+      }
+      notifyMessage("Already Followed", `This page is already being followed: ${title}`, favIconUrl);
+      return true;
+    }
+
+    await state.setMark(hostname, bookmarkMark);
     notifyMessage("FollowMark Added", `Mark added for bookmark: ${title}`, favIconUrl);
     return true;
   }
