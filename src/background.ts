@@ -6,11 +6,10 @@ const { active, inactive } = Icons;
 chrome.tabs.onUpdated.addListener(async (_, changeInfo, tab) => {
   const state = await stateAwait;
   if (changeInfo.status === "complete" && tab.url) {
-    const mark = state.getMark(tab.url);
     const foundPage = state.getMarkPage(tab.url, tab.title);
 
-    if (mark && foundPage) {
-      const [hostname, pageKey, page] = foundPage;
+    if (foundPage) {
+      const { hostname, pageKey, page } = foundPage;
       await state.updateMark(hostname, {
         pages: {
           [pageKey]: {
@@ -21,7 +20,7 @@ chrome.tabs.onUpdated.addListener(async (_, changeInfo, tab) => {
         },
       });
 
-      await chrome.action.setIcon({ path: mark.pages[pageKey].favIconUrl || active });
+      await chrome.action.setIcon({ path: page.favIconUrl || active });
     } else {
       await chrome.action.setIcon({ path: inactive });
     }
@@ -36,7 +35,7 @@ chrome.tabs.onActivated.addListener(async (activateTab) => {
 
     const foundPage = state.getMarkPage(tab.url);
     if (foundPage) {
-      await chrome.action.setIcon({ path: foundPage[2].favIconUrl || active });
+      await chrome.action.setIcon({ path: foundPage.page.favIconUrl || active });
     } else {
       await chrome.action.setIcon({ path: inactive });
     }
