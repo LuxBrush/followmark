@@ -70,26 +70,30 @@ export class FollowMarkState {
     }
   }
 
-  getMarkPage(href: string, title?: string, pageKey?: string): [string, string, Page] | null {
+  getMarkPage(
+    href: string,
+    title?: string,
+    pageKey?: string,
+  ): { hostname: string; pageKey: string; page: Page } | null {
     try {
       const url = new URL(href);
       const mark = this.getMarks()[url.hostname];
 
       if (!mark || !mark.pages) return null;
 
-      if (pageKey && mark.pages[pageKey]) return [mark.hostname, pageKey, mark.pages[pageKey]];
+      if (pageKey && mark.pages[pageKey]) return { hostname: mark.hostname, pageKey, page: mark.pages[pageKey] };
 
       if (title) {
         const extractedPageKey = extractPageKey(mark.hostname, title, href);
 
         if (mark.pages[extractedPageKey]) {
-          return [mark.hostname, extractedPageKey, mark.pages[extractedPageKey]];
+          return { hostname: mark.hostname, pageKey: extractedPageKey, page: mark.pages[extractedPageKey] };
         }
       }
 
       const foundPage = Object.entries(mark.pages).find(([_, page]) => page.urlString === href);
       if (foundPage) {
-        return [mark.hostname, foundPage[0], foundPage[1]] as [string, string, Page];
+        return { hostname: mark.hostname, pageKey: foundPage[0], page: foundPage[1] };
       }
       return null;
     } catch (error) {
