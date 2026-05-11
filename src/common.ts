@@ -103,12 +103,15 @@ export class FollowMarkState {
   }
 
   async setMarks(followMarks: FollowMarks) {
-    const folderID = await this.getFollowMarkFolderID();
     const bookmarkActions: Promise<void>[] = [];
+    let folderID: string | null = null;
 
     for (const mark of Object.values(followMarks)) {
       for (const [key, page] of Object.entries(mark.pages)) {
         if (!page.bookmarkID) {
+          if (!folderID) {
+            folderID = await this.getFollowMarkFolderID();
+          }
           bookmarkActions.push(
             (async () => {
               const newBookmark = await chrome.bookmarks.create({
@@ -140,9 +143,9 @@ export class FollowMarkState {
 
   async updateMarks(marks: Record<string, Partial<Mark>>) {
     const current = this.getMarks();
-    const folderID = await this.getFollowMarkFolderID();
-
     const bookmarkActions: Promise<void>[] = [];
+
+    let folderID: string | null = null;
 
     for (const [hostname, partialMark] of Object.entries(marks)) {
       if (!current[hostname]) {
@@ -169,6 +172,9 @@ export class FollowMarkState {
                 .then(() => {}),
             );
           } else {
+            if (!folderID) {
+              folderID = await this.getFollowMarkFolderID();
+            }
             bookmarkActions.push(
               (async () => {
                 const newBookmark = await chrome.bookmarks.create({
