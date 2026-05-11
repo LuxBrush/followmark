@@ -143,16 +143,24 @@ export class FollowMarkState {
 
   async updateMarks(marks: Record<string, Partial<Mark>>) {
     const current = this.getMarks();
-    const bookmarkActions: Promise<void>[] = [];
-
-    let folderID: string | null = null;
-
-    for (const [hostname, partialMark] of Object.entries(marks)) {
+    const bookmarkActions: Promise<any>[] = [];
+    const validEntries = Object.entries(marks).filter(([hostname]) => {
       if (!current[hostname]) {
         notifyMessage("FollowMark Update Error", `Attempted to update non-existent mark for ${hostname}`);
-        continue;
+        return false;
       }
+      return true;
+    });
 
+    if (validEntries.length === 0) return;
+
+    const bookmarkIdCheck = validEntries.some(([_, m]) => {
+      m.pages && Object.values(m.pages).some((p) => !p.bookmarkID);
+    });
+
+    let folderID = bookmarkIdCheck ? await this.getFollowMarkFolderID() : null;
+
+    for (const [hostname, partialMark] of validEntries) {
       current[hostname] = {
         ...current[hostname],
         ...partialMark,
@@ -164,12 +172,10 @@ export class FollowMarkState {
           const page = current[hostname].pages[key];
           if (page.bookmarkID) {
             bookmarkActions.push(
-              chrome.bookmarks
-                .update(page.bookmarkID, {
-                  title: page.title,
-                  url: page.urlString,
-                })
-                .then(() => {}),
+              chrome.bookmarks.update(page.bookmarkID, {
+                title: page.title,
+                url: page.urlString,
+              }),
             );
           } else {
             if (!folderID) {
