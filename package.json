@@ -1,0 +1,32 @@
+{
+  "name": "followmark",
+  "version": "0.1.1",
+  "author": "Lux Brush",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LuxBrush/followmark.git"
+  },
+  "main": "popup.js",
+  "bugs": {
+    "url": "https://github.com/LuxBrush/followmark/issues"
+  },
+  "description": "FollowMark: Your bookmarks follow your progress automatically! Great for webcomics, wikis, blogs, and YouTube!",
+  "homepage": "https://github.com/LuxBrush/followmark#readme",
+  "keywords": [
+    "browser-extension",
+    "bookmarks",
+    "progress-tracking",
+    "web-extension",
+    "chrome-extension",
+    "firefox-extension"
+  ],
+  "license": "GPL-3.0",
+  "private": true,
+  "scripts": {
+    "preview": "web-ext run -s ./dist",
+    "build": "tsc --build",
+    "watch": "tsc --build --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "type": "module"
+}
