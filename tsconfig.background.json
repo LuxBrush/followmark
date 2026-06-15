@@ -6,7 +6,7 @@
     "strict": true,
     "sourceMap": false,
     "rootDir": "./src",
-    "outDir": "./dist",
+    "outDir": "./temp",
     "removeComments": true,
     "skipLibCheck": true,
     "types": ["chrome-types"]
