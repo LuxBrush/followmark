@@ -134,6 +134,7 @@ export class FollowMarkState {
     });
 
     this.followMarkStorage.followMarks = { ...this.followMarkStorage.followMarks, ...followMarks };
+    this.validMarks(this.followMarkStorage.followMarks);
     await writeStorage(this.followMarkStorage);
   }
 
@@ -203,6 +204,8 @@ export class FollowMarkState {
       }
     });
 
+    this.validMarks(current);
+
     this.followMarkStorage.followMarks = current;
     await writeStorage(this.followMarkStorage);
   }
@@ -234,6 +237,44 @@ export class FollowMarkState {
       return currentVersion;
     }
     return currentVersion;
+  }
+
+  validMarks(marks: FollowMarks) {
+    if (!marks || typeof marks !== "object") return false;
+    return Object.values(marks).every((mark) => this.isValidMark(mark));
+  }
+
+  isValidMark(mark: Mark) {
+    const pm = mark as Partial<Mark>;
+    if (typeof pm.hostname !== "string" || !pm.hostname) return false;
+    if (!pm.pages || typeof pm.pages !== "object") return false;
+
+    for (const page of Object.values(pm.pages)) {
+      if (!this.isValidPage(page)) return false;
+    }
+
+    return true;
+  }
+
+  isValidPage(page: Page) {
+    if (!page || typeof page !== "object") return false;
+
+    const pp = page as Partial<Page>;
+    if (typeof pp.bookmarkID !== "string" || !pp.bookmarkID) return false;
+    if (typeof pp.title !== "string") return false;
+    if (typeof pp.urlString !== "string" || !this.isValidURL(pp.urlString)) return false;
+    if (typeof pp.favIconUrl !== "string") return false;
+
+    return true;
+  }
+
+  isValidURL(urlString: string) {
+    try {
+      new URL(urlString);
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
 
