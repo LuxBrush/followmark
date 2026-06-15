@@ -1,0 +1,32 @@
+{
+  "dist": {
+    "firefox": "dist-firefox",
+    "chrome": "dist-chrome"
+  },
+  "manifest": {
+    "merge": true,
+    "location": "manifest.json",
+    "contents": {
+      "browser_specific_settings": {
+        "gecko": {
+          "id": "npmlux@proton.me",
+          "strict_min_version": "142.0",
+          "data_collection_permissions": {
+            "required": ["bookmarksInfo"],
+            "optional": []
+          }
+        }
+      },
+      "background": {
+        "scripts": ["background.js"],
+        "type": "module"
+      }
+    }
+  },
+  "root": "",
+  "copyFiles": [
+    { "from": "popup.html", "to": "popup.html" },
+    { "from": "style.css", "to": "style.css" },
+    { "from": "icons", "to": "icons" }
+  ]
+}
