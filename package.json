@@ -23,9 +23,9 @@
   "license": "GPL-3.0",
   "private": true,
   "scripts": {
-    "preview": "web-ext run -s ./dist",
-    "build": "tsc --build",
-    "watch": "tsc --build --watch",
+    "preview": "web-ext run -s ./dist-firefox",
+    "build:c": "ao-build chrome",
+    "build:f": "ao-build firefox",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "type": "module"
