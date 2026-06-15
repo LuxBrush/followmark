@@ -1,4 +1,4 @@
-dist/*.js
+dist-*
 node_modules
 *.tsbuildinfo
 package-lock.json
