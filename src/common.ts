@@ -6,6 +6,9 @@ export const Icons = {
 };
 
 export function notifyMessage(title: string, message: string, iconUrl: string = "icons/active.png") {
+  const isFirefox = typeof (chrome.runtime as any).getBrowserInfo === "function";
+  const isChromium = !isFirefox;
+  if (isChromium) iconUrl = chrome.runtime.getURL("icons/active.png");
   chrome.notifications.create({
     type: "basic",
     iconUrl,
