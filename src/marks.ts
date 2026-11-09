@@ -1,5 +1,7 @@
 import { buildBookmarkList, findBookmark, findBookmarks } from "./bookmarks.js";
-import { extractPageKey, FollowMarkState, notifyMessage } from "./common.js";
+import { extractPageKey, FollowMarkState, notifyMessage, Icons } from "./common.js";
+
+const { active } = Icons;
 
 /**
  * Creates or updates a follow mark for the currently active tab.
@@ -48,6 +50,7 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
 
     await state.setMark(hostname, bookmarkMark);
     notifyMessage("FollowMark Added", `Mark added for bookmark: ${title}`, favIconUrl);
+    await chrome.action.setIcon({ path: favIconUrl || active });
     return true;
   }
 
@@ -69,6 +72,7 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
           },
         });
         notifyMessage("FollowMark Page Added", `Mark page added for: ${hostname} Page: ${title}`, favIconUrl);
+        await chrome.action.setIcon({ path: favIconUrl || active });
         return true;
       }
     }
@@ -88,6 +92,7 @@ export async function MakeMark(state: FollowMarkState, bookmarkID?: string) {
     },
   });
   notifyMessage("FollowMark Added", `New mark added for: ${title}`, favIconUrl);
+  await chrome.action.setIcon({ path: favIconUrl || active });
   return true;
 }
 
@@ -233,5 +238,6 @@ export async function markFromBookmark(state: FollowMarkState, bookmarkID: strin
 
     await state.setMark(hostname, bookmarkMark);
     notifyMessage("FollowMark Added", `New Mark added for: ${title}`, favIconUrl);
+    await chrome.action.setIcon({ path: favIconUrl || active });
   }
 }
